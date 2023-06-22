@@ -2,6 +2,8 @@ package frc.robot.subsystems.drive;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+
 public interface DriveIO {
   @AutoLog
   public static class DriveIOInputs {
@@ -19,4 +21,16 @@ public interface DriveIO {
   /** Run open loop at the specified voltage. */
   public default void setVoltage(double leftVolts, double rightVolts) {
   }
+
+  public default double getLeftPositionMeters() {
+    return 0.0;
+  }
+
+  public default double getRightPositionMeters() {
+    return 0.0;
+  }
+
+  public default void zero() {}
+
+  public default void setVelocity(DifferentialDriveWheelSpeeds wheelSpeeds) {}
 }

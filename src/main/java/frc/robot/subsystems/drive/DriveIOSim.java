@@ -1,10 +1,13 @@
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotGearing;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotMotor;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotWheelSize;
+
+import static frc.robot.Constants.Drivetrain.DRIVE_TRAJ_MAX_VEL;
 
 public class DriveIOSim implements DriveIO {
   private DifferentialDrivetrainSim sim = DifferentialDrivetrainSim.createKitbotSim(KitbotMotor.kDualCIMPerSide,
@@ -23,5 +26,26 @@ public class DriveIOSim implements DriveIO {
   @Override
   public void setVoltage(double leftVolts, double rightVolts) {
     sim.setInputs(MathUtil.clamp(leftVolts, -12.0, 12.0), MathUtil.clamp(rightVolts, -12.0, 12.0));
+  }
+
+  @Override
+  public double getLeftPositionMeters() {
+    return sim.getLeftPositionMeters();
+  }
+
+  @Override
+  public double getRightPositionMeters() {
+    return sim.getRightPositionMeters();
+  }
+
+  @Override
+  public void setVelocity(DifferentialDriveWheelSpeeds wheelSpeeds) {
+    sim.setInputs(wheelSpeeds.leftMetersPerSecond * 12 / DRIVE_TRAJ_MAX_VEL,
+        wheelSpeeds.rightMetersPerSecond * 12 / DRIVE_TRAJ_MAX_VEL);
+  }
+
+  @Override
+  public void zero() {
+    
   }
 }

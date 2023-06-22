@@ -2,10 +2,17 @@ package frc.robot.subsystems.drive;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.CANSparkMax.ControlType;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.util.Units;
 import frc.robot.util.Gyro;
+
+import static frc.robot.Constants.Drivetrain.*;
+import static frc.robot.Constants.UPDATE_PERIOD;
 
 public class DriveIOSparkMax implements DriveIO {
   private static final double GEAR_RATIO = 6.0;
@@ -14,8 +21,13 @@ public class DriveIOSparkMax implements DriveIO {
   private final CANSparkMax rightLeader;
   private final CANSparkMax leftFollower;
   private final CANSparkMax rightFollower;
-  private final RelativeEncoder leftEncoder;
-  private final RelativeEncoder rightEncoder;
+  private RelativeEncoder leftEncoder;
+  private RelativeEncoder rightEncoder;
+
+  private SparkMaxPIDController leftPIDController;
+  private SparkMaxPIDController rightPIDController;
+ 
+  private PIDController anglePIDController;
 
   private final Gyro gyro;
 
@@ -25,8 +37,8 @@ public class DriveIOSparkMax implements DriveIO {
     leftFollower = new CANSparkMax(3, MotorType.kBrushless);
     rightFollower = new CANSparkMax(4, MotorType.kBrushless);
 
-    leftEncoder = leftLeader.getEncoder();
-    rightEncoder = rightLeader.getEncoder();
+    configureEncoders();
+    configurePID();
 
     leftLeader.restoreFactoryDefaults();
     rightLeader.restoreFactoryDefaults();
@@ -51,6 +63,21 @@ public class DriveIOSparkMax implements DriveIO {
     gyro = Gyro.getInstance();
   }
 
+  // configure all encoder settings and conversion factors
+  private void configureEncoders() {
+    leftEncoder = leftLeader.getEncoder();
+    rightEncoder = rightLeader.getEncoder();
+
+
+    leftEncoder.setPositionConversionFactor(Math.PI * DRIVE_WHEEL_DIAM_M / DRIVE_GEARBOX_REDUCTION);
+    rightEncoder.setPositionConversionFactor(Math.PI * DRIVE_WHEEL_DIAM_M / DRIVE_GEARBOX_REDUCTION);
+    leftEncoder.setVelocityConversionFactor(Math.PI * DRIVE_WHEEL_DIAM_M / DRIVE_GEARBOX_REDUCTION / 60.0);
+    rightEncoder.setVelocityConversionFactor(Math.PI * DRIVE_WHEEL_DIAM_M / DRIVE_GEARBOX_REDUCTION / 60.0);
+   
+    leftEncoder.setPosition(0);
+    rightEncoder.setPosition(0);
+}
+
   @Override
   public void updateInputs(DriveIOInputs inputs) {
     inputs.leftPositionRad = Units.rotationsToRadians(leftEncoder.getPosition() / GEAR_RATIO);
@@ -66,5 +93,45 @@ public class DriveIOSparkMax implements DriveIO {
   public void setVoltage(double leftVolts, double rightVolts) {
     leftLeader.setVoltage(leftVolts);
     rightLeader.setVoltage(rightVolts);
+  }
+
+  @Override
+  public double getLeftPositionMeters() {
+    return leftEncoder.getPosition() * leftEncoder.getPositionConversionFactor();
+  }
+
+  @Override
+  public double getRightPositionMeters() {
+    return rightEncoder.getPosition() * rightEncoder.getPositionConversionFactor();
+  }
+
+  // configure all PID settings on the motors
+  private void configurePID() {
+    // configure velocity PID controllers
+    leftPIDController = leftLeader.getPIDController();
+    rightPIDController = rightLeader.getPIDController();
+
+    leftPIDController.setP(DRIVE_VEL_LEFT_P, DRIVE_VEL_SLOT);
+    leftPIDController.setFF(DRIVE_VEL_LEFT_F, DRIVE_VEL_SLOT);
+    rightPIDController.setP(DRIVE_VEL_RIGHT_P, DRIVE_VEL_SLOT);
+    rightPIDController.setFF(DRIVE_VEL_RIGHT_F, DRIVE_VEL_SLOT);
+
+    // configure turn angle PID controllers
+    anglePIDController = new PIDController(DRIVE_ANGLE_PID[0], DRIVE_ANGLE_PID[1], DRIVE_ANGLE_PID[2], UPDATE_PERIOD);
+    anglePIDController.setTolerance(DRIVE_ANGLE_TOLERANCE); // TODO Look into velocity tolerance as well
+    anglePIDController.enableContinuousInput(-180.0, 180.0);
+  }
+
+  @Override
+  public void setVelocity(DifferentialDriveWheelSpeeds wheelSpeeds) {
+    leftPIDController.setReference(wheelSpeeds.leftMetersPerSecond, ControlType.kVelocity, DRIVE_VEL_SLOT);
+    rightPIDController.setReference(wheelSpeeds.rightMetersPerSecond, ControlType.kVelocity, DRIVE_VEL_SLOT);
+  }
+
+  @Override
+  public void zero() {
+    Gyro.getInstance().zeroAll();
+    leftEncoder.setPosition(0);
+    rightEncoder.setPosition(0);
   }
 }
