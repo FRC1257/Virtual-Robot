@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.util.Units;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
  * numerical or boolean constants. This class should not be used for any other
@@ -28,6 +30,57 @@ public final class Constants {
     REPLAY
   }
 
+  public static class Elevator {
+    public static class ElevatorSimConstants {
+      public static final int kMotorPort = 0;
+      public static final int kEncoderAChannel = 0;
+      public static final int kEncoderBChannel = 1;
+      public static final int kJoystickPort = 0;
+  
+      public static final double kElevatorKp = 5;
+      public static final double kElevatorKi = 0;
+      public static final double kElevatorKd = 0;
+  
+      public static final double kElevatorkS = 0.0; // volts (V)
+      public static final double kElevatorkG = 0.762; // volts (V)
+      public static final double kElevatorkV = 0.762; // volt per velocity (V/(m/s))
+      public static final double kElevatorkA = 0.0; // volt per acceleration (V/(m/s²))
+  
+      public static final double kElevatorGearing = 10.0;
+      public static final double kElevatorDrumRadius = Units.inchesToMeters(2.0);
+      public static final double kCarriageMass = 4.0; // kg
+  
+      public static final double kSetpointMeters = 0.75;
+      // Encoder is reset to measure 0 at the bottom, so minimum height is 0.
+      public static final double kMinElevatorHeightMeters = 0.0;
+      public static final double kMaxElevatorHeightMeters = 1.25;
+  
+      // distance per pulse = (distance per revolution) / (pulses per revolution)
+      // = (Pi * D) / ppr
+      public static final double kElevatorEncoderDistPerPulse = 2.0 * Math.PI * kElevatorDrumRadius / 4096;
+    }
+
+    public static class ElevatorPhysicalConstants {
+
+      public static final double[] ELEVATOR_PID = new double[] {0.1, 0, 0, 0};
+    
+      // TODO Tune
+      public static double ELEVATOR_PID_MAX_OUTPUT = 0.7;
+      public static double ELEVATOR_REV_TO_POS_FACTOR = 1; 
+    
+      // TODO Tune
+      public static final double ELEVATOR_SETPOINT_RETRACT = 0;
+      public static final double ELEVATOR_SETPOINT_EXTEND = 32;
+    
+      public static final double ELEVATOR_SETPOINT_MIDDLE = (ELEVATOR_SETPOINT_RETRACT + ELEVATOR_SETPOINT_EXTEND) / 2;
+    
+      public static final double ELEVATOR_STOP_BUFFER = 5;
+    }
+
+    public static final double ELEVATOR_TOLERANCE = 3;
+
+  }
+
   public static class Drivetrain {
     // drivetrain constants
     public static double DRIVE_TRACK_WIDTH_M = 0.86;// 0.66; // m
@@ -46,15 +99,13 @@ public final class Constants {
 
     // trajectory following
     public static double DRIVE_TRAJ_MAX_VEL = 4.0; // m/s
-    public static double DRIVE_TRAJ_MAX_ACC = 0.515; //.75;  // m/s^2
+    public static double DRIVE_TRAJ_MAX_ACC = 0.515; // .75; // m/s^2
     public static double DRIVE_TRAJ_RAMSETE_B = 2.0; // don't change
     public static double DRIVE_TRAJ_RAMSETE_ZETA = 0.7;
 
-
     // aligning
     public static double DRIVE_ALIGN_MAX_VEL = 0.75; // m/s
-    public static double DRIVE_ALIGN_MAX_ACC = 0.350; //.75;  // m/s^2
-
+    public static double DRIVE_ALIGN_MAX_ACC = 0.350; // .75; // m/s^2
 
     // linear position PID
     public static double[] DRIVE_DIST_PID = { 3.50, 0.0, 0.0 };
@@ -83,12 +134,50 @@ public final class Constants {
     public static final double TRACKED_TAG_DISTANCE_DRIVE_KP = 0.3; // P (Proportional) constant of a PID loop
     public static final double TRACKED_TAG_AREA_DRIVE_KP = 0.2; // P (Proportional) constant of a PID loop
     public static final double APRILTAG_POWER_CAP = 0.75;
+  };
+
+  public static class ElectricalLayout {
+    // Controllers
+    public final static int CONTROLLER_DRIVER_ID = 0;
+    public final static int CONTROLLER_OPERATOR_ID = 1;
+
+    // Drivetrain Test Bot
+    /* public final static int DRIVE_FRONT_LEFT = 17;
+    public final static int DRIVE_FRONT_RIGHT = 10;
+    public final static int DRIVE_BACK_LEFT = 9;
+    public final static int DRIVE_BACK_RIGHT = 11; */
+
+    // Drivetrain Main
+    public final static int DRIVE_FRONT_LEFT = 1;
+    public final static int DRIVE_FRONT_RIGHT = 2;
+    public final static int DRIVE_BACK_LEFT = 3;
+    public final static int DRIVE_BACK_RIGHT = 4;
+
+    // Intakes
+    public final static int INTAKE_MOTOR_ID = 9;
+    
+    public static final int INTAKE_ARM_MOTOR_LEFT_ID = 6;
+    public static final int INTAKE_ARM_MOTOR_RIGHT_ID = 8;
+
+    // Claw
+    public final static int CLAW_MOTOR_LEFT_ID = 10;
+
+    // New Elevator Motor Design
+    public final static int ELEVATOR_MOTOR_ID = 5;
+
+    // Pivot ARm
+    public static int PIVOT_ARM_ID = 7;
+
+    // Sensors
+    public static final int INTAKE_BUMP_SWITCH_ID = 24;
+    public static final int ELEVATOR_LIMIT_SWITCH = 0;
 };
 
   public static double PI = 3.141592653589793238462643;
   public static double UPDATE_PERIOD = 0.010; // seconds
   public final static int NEO_550_CURRENT_LIMIT = 25; // amps
-  public final static int QUADRATURE_COUNTS_PER_REV = 8192; // encoder resolution https://www.revrobotics.com/rev-11-1271/
+  public final static int QUADRATURE_COUNTS_PER_REV = 8192; // encoder resolution
+  // https://www.revrobotics.com/rev-11-1271/
 
   /** Ambiguous with NEO_CURRENT_LIMIT in ElectricalLayout */
   // public final static int NEO_CURRENT_LIMIT = 80; // amps

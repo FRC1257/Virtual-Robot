@@ -26,7 +26,7 @@ public class DriveIOSparkMax implements DriveIO {
 
   private SparkMaxPIDController leftPIDController;
   private SparkMaxPIDController rightPIDController;
- 
+
   private PIDController anglePIDController;
 
   private final Gyro gyro;
@@ -68,15 +68,14 @@ public class DriveIOSparkMax implements DriveIO {
     leftEncoder = leftLeader.getEncoder();
     rightEncoder = rightLeader.getEncoder();
 
-
     leftEncoder.setPositionConversionFactor(Math.PI * DRIVE_WHEEL_DIAM_M / DRIVE_GEARBOX_REDUCTION);
     rightEncoder.setPositionConversionFactor(Math.PI * DRIVE_WHEEL_DIAM_M / DRIVE_GEARBOX_REDUCTION);
     leftEncoder.setVelocityConversionFactor(Math.PI * DRIVE_WHEEL_DIAM_M / DRIVE_GEARBOX_REDUCTION / 60.0);
     rightEncoder.setVelocityConversionFactor(Math.PI * DRIVE_WHEEL_DIAM_M / DRIVE_GEARBOX_REDUCTION / 60.0);
-   
+
     leftEncoder.setPosition(0);
     rightEncoder.setPosition(0);
-}
+  }
 
   @Override
   public void updateInputs(DriveIOInputs inputs) {
