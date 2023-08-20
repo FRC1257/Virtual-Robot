@@ -6,6 +6,10 @@ public interface ElevatorIO {
     @AutoLog
     public static class ElevatorIOInputs {
         public double positionMeters = 0.0;
+        public double velocityMeters = 0.0;
+        public double appliedVolts = 0.0;
+        public double[] currentAmps = new double[] {};
+        public double[] tempCelsius = new double[] {};
     }
 
     /** Updates the set of loggable inputs. */
@@ -26,6 +30,13 @@ public interface ElevatorIO {
 
     /** Go to Setpoint */
     public default void goToSetpoint(double setpoint) {
+    }
+
+    public default void setBrake(boolean brake) {
+    }
+
+    public default boolean atSetpoint() {
+        return false;
     }
 
 }

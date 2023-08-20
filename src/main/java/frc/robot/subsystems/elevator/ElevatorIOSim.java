@@ -55,6 +55,9 @@ public class ElevatorIOSim implements ElevatorIO {
     public void updateInputs(ElevatorIOInputs inputs) {
         sim.update(0.02);
         m_encoderSim.setDistance(sim.getPositionMeters());
+        inputs.positionMeters = sim.getPositionMeters();
+        inputs.velocityMeters = sim.getVelocityMetersPerSecond();
+        inputs.currentAmps = new double[] {sim.getCurrentDrawAmps()};
     }
 
     @Override
@@ -75,5 +78,10 @@ public class ElevatorIOSim implements ElevatorIO {
     @Override
     public double getDistance() {
         return sim.getPositionMeters();
+    }
+
+    @Override
+    public boolean atSetpoint() {
+        return m_controller.atGoal();
     }
 }

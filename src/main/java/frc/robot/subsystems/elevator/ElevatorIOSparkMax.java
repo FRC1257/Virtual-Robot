@@ -23,6 +23,8 @@ public class ElevatorIOSparkMax implements ElevatorIO {
     private RelativeEncoder encoder;
     private DutyCycleEncoder absoluteEncoder;
 
+    private double setpoint = 0;
+
     public ElevatorIOSparkMax() {
         elevatorMotor = new CANSparkMax(ELEVATOR_MOTOR_ID, MotorType.kBrushless);
         elevatorMotor.restoreFactoryDefaults();
@@ -54,6 +56,10 @@ public class ElevatorIOSparkMax implements ElevatorIO {
     @Override
     public void updateInputs(ElevatorIOInputs inputs) {
         inputs.positionMeters = encoder.getPosition();
+        inputs.velocityMeters = encoder.getVelocity();
+        inputs.appliedVolts = elevatorMotor.getAppliedOutput() * elevatorMotor.getBusVoltage();
+        inputs.currentAmps = new double[] {elevatorMotor.getOutputCurrent()};
+        inputs.tempCelsius = new double[] {elevatorMotor.getMotorTemperature()};
     }
 
     /** Run open loop at the specified voltage. */
@@ -71,7 +77,18 @@ public class ElevatorIOSparkMax implements ElevatorIO {
     /** Go to Setpoint */
     @Override
     public void goToSetpoint(double setpoint) {
+        this.setpoint = setpoint;
         pidController.setReference(setpoint, CANSparkMax.ControlType.kPosition);
+    }
+
+    @Override
+    public void setBrake(boolean brake) {
+        elevatorMotor.setIdleMode(brake ? IdleMode.kBrake : IdleMode.kCoast);
+    }
+
+    @Override
+    public boolean atSetpoint() {
+        return Math.abs(encoder.getPosition() - setpoint) < ELEVATOR_PID_TOLERANCE;
     }
 
 }

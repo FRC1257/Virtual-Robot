@@ -22,6 +22,14 @@ public class SnailController extends XboxController {
         return getLeftTriggerAxis() - getRightTriggerAxis();
     }
 
+    public void setRumble(boolean left, double amount) {
+        if (left) {
+            setRumble(RumbleType.kLeftRumble, amount);
+        } else {
+            setRumble(RumbleType.kRightRumble, amount);
+        }
+    }
+
     public enum DPad {
         UP,
         RIGHT,

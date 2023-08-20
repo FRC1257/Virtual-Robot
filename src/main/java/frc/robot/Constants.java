@@ -67,6 +67,8 @@ public final class Constants {
       // TODO Tune
       public static double ELEVATOR_PID_MAX_OUTPUT = 0.7;
       public static double ELEVATOR_REV_TO_POS_FACTOR = 1; 
+
+      public static double ELEVATOR_PID_TOLERANCE = 3;
     
       // TODO Tune
       public static final double ELEVATOR_SETPOINT_RETRACT = 0;

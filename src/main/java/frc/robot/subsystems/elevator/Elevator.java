@@ -3,11 +3,15 @@ package frc.robot.subsystems.elevator;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotContainer;
 
 import static frc.robot.Constants.Elevator.*;
 import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants.ELEVATOR_PID;
@@ -54,6 +58,10 @@ public class Elevator extends SubsystemBase {
         io.setVoltage(motorVolts);
     }
 
+    public void move(double speed) {
+        io.setVoltage(speed * 12);
+    }
+
     public void runPID() {
         io.goToSetpoint(setpoint);
     }
@@ -64,6 +72,13 @@ public class Elevator extends SubsystemBase {
 
     public boolean atSetpoint() {
         return Math.abs(io.getDistance() - setpoint) < ELEVATOR_TOLERANCE;
+    }
+
+    public Command PIDCommand(double setpoint) {
+        return this.run(() -> {
+            setPID(setpoint);
+            this.io.goToSetpoint(setpoint);
+        });
     }
     
 }

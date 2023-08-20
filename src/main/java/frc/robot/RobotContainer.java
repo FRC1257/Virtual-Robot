@@ -15,12 +15,19 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOSim;
 import frc.robot.subsystems.drive.DriveIOSparkMax;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorIO;
+import frc.robot.subsystems.elevator.ElevatorIOSim;
+import frc.robot.subsystems.elevator.ElevatorIOSparkMax;
+import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants;
+
+import frc.robot.util.CommandSnailController;
 import frc.robot.util.SnailController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj.XboxController.Button;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -32,10 +39,12 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+  private final Elevator elevator;
 
   // Controller
-  // private final CommandXboxController controller = new CommandXboxController(0);
-  private final SnailController controller = new SnailController(0);
+  // private final CommandXboxController controller = new
+  // CommandXboxController(0);
+  private final CommandSnailController controller = new CommandSnailController(0);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
@@ -49,6 +58,7 @@ public class RobotContainer {
       // Real robot, instantiate hardware IO implementations
       case REAL:
         drive = new Drive(new DriveIOSparkMax(), new Pose2d());
+        elevator = new Elevator(new ElevatorIOSparkMax());
         // drive = new Drive(new DriveIOFalcon500());
         // flywheel = new Flywheel(new FlywheelIOFalcon500());
         break;
@@ -56,13 +66,13 @@ public class RobotContainer {
       // Sim robot, instantiate physics sim IO implementations
       case SIM:
         drive = new Drive(new DriveIOSim(), new Pose2d());
+        elevator = new Elevator(new ElevatorIOSim());
         break;
 
       // Replayed robot, disable IO implementations
       default:
-        drive = new Drive(new DriveIO() {
-        }, new Pose2d());
-        
+        drive = new Drive(new DriveIO() {}, new Pose2d());
+        elevator = new Elevator(new ElevatorIO() {});
         break;
     }
 
@@ -83,7 +93,12 @@ public class RobotContainer {
   private void configureButtonBindings() {
     drive.setDefaultCommand(
         new RunCommand(() -> drive.driveArcade(controller.getDriveForward(), controller.getDriveTurn()), drive));
-    }
+    elevator.setDefaultCommand(
+        new RunCommand(() -> elevator.move(controller.getElevatorSpeed()), elevator));
+    controller.y().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND));
+    controller.a().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_RETRACT));
+
+  }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
