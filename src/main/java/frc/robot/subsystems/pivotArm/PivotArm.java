@@ -1,4 +1,4 @@
-package frc.robot.subsystems.elevator;
+package frc.robot.subsystems.pivotArm;
 
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
@@ -8,46 +8,47 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color8Bit;
-import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import frc.robot.RobotContainer;
 
-import static frc.robot.Constants.Elevator.*;
-import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants.ELEVATOR_PID;
+import static frc.robot.Constants.PivotArm.*;
+import static frc.robot.Constants.PivotArm.PIVOT_ARM_PID;
 
-public class Elevator extends SubsystemBase {
-    private final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
+public class PivotArm extends SubsystemBase {
+    private final PivotArmIOInputsAutoLogged inputs = new PivotArmIOInputsAutoLogged();
 
     public enum State {
         MANUAL,
         PID
     }
 
-    private LoggedDashboardNumber p = new LoggedDashboardNumber("Elevator/P", ELEVATOR_PID[0]);
-    private LoggedDashboardNumber i = new LoggedDashboardNumber("Elevator/I", ELEVATOR_PID[1]);
-    private LoggedDashboardNumber d = new LoggedDashboardNumber("Elevator/D", ELEVATOR_PID[2]);
-    private LoggedDashboardNumber ff = new LoggedDashboardNumber("Elevator/FF", ELEVATOR_PID[3]);
+    private LoggedDashboardNumber p = new LoggedDashboardNumber("PivotArm/P", PIVOT_ARM_PID[0]);
+    private LoggedDashboardNumber i = new LoggedDashboardNumber("PivotArm/I", PIVOT_ARM_PID[1]);
+    private LoggedDashboardNumber d = new LoggedDashboardNumber("PivotArm/D", PIVOT_ARM_PID[2]);
+    private LoggedDashboardNumber ff = new LoggedDashboardNumber("PivotArm/FF", PIVOT_ARM_PID[3]);
 
 
     private State state = State.MANUAL;
     private double setpoint = 0;
 
-    private final ElevatorIO io;
+    private final PivotArmIO io;
 
     // Create a Mechanism2d visualization of the elevator
-    private MechanismLigament2d ElevatorMechanism;
+    private MechanismLigament2d armMechanism;
 
-    public Elevator(ElevatorIO io) {
+    public PivotArm(PivotArmIO io) {
         this.io = io;
     }
 
     @Override
     public void periodic() {
         io.updateInputs(inputs);
-        ElevatorMechanism.setLength(io.getDistance());
+        armMechanism.setAngle(inputs.angle);
 
         // Update the PID constants if they have changed
         if (p.get() != io.getP()) 
@@ -63,7 +64,7 @@ public class Elevator extends SubsystemBase {
             io.setFF(ff.get());
         
         // Log Inputs
-        Logger.getInstance().processInputs("Elevator", inputs);
+        Logger.getInstance().processInputs("PivotArm", inputs);
     }
 
     public void setVoltage(double motorVolts) {
@@ -83,19 +84,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public boolean atSetpoint() {
-        return Math.abs(io.getDistance() - setpoint) < ELEVATOR_TOLERANCE;
-    }
-
-    public void setMechanism(MechanismLigament2d mechanism) {
-        ElevatorMechanism = mechanism;
-    }
-
-    public MechanismLigament2d append(MechanismLigament2d mechanism) {
-        return ElevatorMechanism.append(mechanism);
-    }
-
-    public MechanismLigament2d getElevatorMechanism() {
-        return new MechanismLigament2d("Elevator", 30, 36, 5, new Color8Bit(Color.kOrange));
+        return Math.abs(io.getAngle() - setpoint) < PIVOT_ARM_PID_TOLERANCE;
     }
 
     public Command PIDCommand(double setpoint) {
@@ -103,6 +92,18 @@ public class Elevator extends SubsystemBase {
             setPID(setpoint);
             this.io.goToSetpoint(setpoint);
         });
+    }
+
+    public void setMechanism(MechanismLigament2d mechanism) {
+        armMechanism = mechanism;
+    }
+
+    public MechanismLigament2d append(MechanismLigament2d mechanism) {
+        return armMechanism.append(mechanism);
+    }
+
+    public MechanismLigament2d getArmMechanism() {
+        return new MechanismLigament2d("Pivot Arm", 23, 0, 5, new Color8Bit(Color.kAqua));
     }
     
 }

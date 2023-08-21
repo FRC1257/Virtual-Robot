@@ -58,6 +58,7 @@ public class ElevatorIOSim implements ElevatorIO {
         inputs.positionMeters = sim.getPositionMeters();
         inputs.velocityMeters = sim.getVelocityMetersPerSecond();
         inputs.currentAmps = new double[] {sim.getCurrentDrawAmps()};
+        // inputs.voltage = new double[] {sim.getBusVoltageV()};
     }
 
     @Override
@@ -84,4 +85,50 @@ public class ElevatorIOSim implements ElevatorIO {
     public boolean atSetpoint() {
         return m_controller.atGoal();
     }
+
+    @Override
+    public void setP(double p) {
+        m_controller.setP(p);
+    }
+
+    @Override
+    public void setI(double i) {
+        m_controller.setI(i);
+    }
+
+    @Override
+    public void setD(double d) {
+        m_controller.setD(d);
+    }
+
+    @Override
+    public void setFF(double ff) {
+        m_feedforward = new ElevatorFeedforward(
+            kElevatorkS,
+            kElevatorkG,
+            ff,
+            kElevatorkA
+        );
+    }
+
+    @Override
+    public double getP() {
+        return m_controller.getP();
+    }
+
+    @Override
+    public double getI() {
+        return m_controller.getI();
+    }
+
+    @Override
+    public double getD() {
+        return m_controller.getD();
+    }
+
+    @Override
+    public double getFF() {
+        return m_feedforward.calculate(m_controller.getSetpoint().velocity);
+    }
+    
 }

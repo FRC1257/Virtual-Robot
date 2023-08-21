@@ -19,15 +19,22 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOSparkMax;
+import frc.robot.subsystems.pivotArm.PivotArm;
+import frc.robot.subsystems.pivotArm.PivotArmIO;
+import frc.robot.subsystems.pivotArm.PivotArmIOSim;
+import frc.robot.subsystems.pivotArm.PivotArmIOSparkMax;
+
 import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants;
 
 import frc.robot.util.CommandSnailController;
-import frc.robot.util.SnailController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj.XboxController.Button;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -40,11 +47,15 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Elevator elevator;
+  private final PivotArm pivotArm;
+
+  private Mechanism2d mech = new Mechanism2d(3, 3);
 
   // Controller
-  // private final CommandXboxController controller = new
+  // private final CommandXboxController driver = new
   // CommandXboxController(0);
-  private final CommandSnailController controller = new CommandSnailController(0);
+  private final CommandSnailController driver = new CommandSnailController(0);
+  private final CommandSnailController operator = new CommandSnailController(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
@@ -59,6 +70,7 @@ public class RobotContainer {
       case REAL:
         drive = new Drive(new DriveIOSparkMax(), new Pose2d());
         elevator = new Elevator(new ElevatorIOSparkMax());
+        pivotArm = new PivotArm(new PivotArmIOSparkMax());
         // drive = new Drive(new DriveIOFalcon500());
         // flywheel = new Flywheel(new FlywheelIOFalcon500());
         break;
@@ -67,14 +79,24 @@ public class RobotContainer {
       case SIM:
         drive = new Drive(new DriveIOSim(), new Pose2d());
         elevator = new Elevator(new ElevatorIOSim());
+        pivotArm = new PivotArm(new PivotArmIOSim());
         break;
 
       // Replayed robot, disable IO implementations
       default:
-        drive = new Drive(new DriveIO() {}, new Pose2d());
-        elevator = new Elevator(new ElevatorIO() {});
+        drive = new Drive(new DriveIO() {
+        }, new Pose2d());
+        elevator = new Elevator(new ElevatorIO() {
+        });
+        pivotArm = new PivotArm(new PivotArmIO() {
+        });
         break;
     }
+
+    MechanismRoot2d root = mech.getRoot("elevator", 1, 0.5);
+    elevator.setMechanism(root.append(elevator.getElevatorMechanism()));
+    pivotArm.setMechanism(elevator.append(pivotArm.getArmMechanism()));
+    SmartDashboard.putData("Arm Mechanism", mech);
 
     // Set up auto routines
     autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
@@ -92,12 +114,19 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     drive.setDefaultCommand(
-        new RunCommand(() -> drive.driveArcade(controller.getDriveForward(), controller.getDriveTurn()), drive));
+        new RunCommand(() -> drive.driveArcade(driver.getDriveForward(), driver.getDriveTurn()), drive));
     elevator.setDefaultCommand(
-        new RunCommand(() -> elevator.move(controller.getElevatorSpeed()), elevator));
-    controller.y().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND));
-    controller.a().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_RETRACT));
+        new RunCommand(() -> elevator.move(operator.getElevatorSpeed()), elevator));
+    operator.y().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND));
+    operator.a().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_RETRACT));
 
+    // configures the subsystem's default command which is a lambda that moves the
+    // subsystem based on the controller's input
+    pivotArm.setDefaultCommand(
+        new RunCommand(() -> pivotArm.move(operator.getLeftY()), pivotArm));
+    // these are triggers that run the subsystem's command
+    operator.b().onTrue(pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_TOP));
+    operator.x().onTrue(pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_BOTTOM));
   }
 
   /**

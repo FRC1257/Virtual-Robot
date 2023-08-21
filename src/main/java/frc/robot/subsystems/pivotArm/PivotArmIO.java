@@ -1,19 +1,19 @@
-package frc.robot.subsystems.elevator;
+package frc.robot.subsystems.pivotArm;
 
 import org.littletonrobotics.junction.AutoLog;
 
-public interface ElevatorIO {
+public interface PivotArmIO {
     @AutoLog
-    public static class ElevatorIOInputs {
-        public double positionMeters = 0.0;
-        public double velocityMeters = 0.0;
+    public static class PivotArmIOInputs {
+        public double angle = 0.0;
+        public double angleRadsPerSec = 0.0;
         public double appliedVolts = 0.0;
         public double[] currentAmps = new double[] {};
         public double[] tempCelsius = new double[] {};
     }
 
     /** Updates the set of loggable inputs. */
-    public default void updateInputs(ElevatorIOInputs inputs) {
+    public default void updateInputs(PivotArmIOInputs inputs) {
     }
 
     /** Run open loop at the specified voltage. */
@@ -21,7 +21,7 @@ public interface ElevatorIO {
     }
 
     /** Returns the current distance measurement. */
-    public default double getDistance() {
+    public default double getAngle() {
         return 0.0;
     }
 

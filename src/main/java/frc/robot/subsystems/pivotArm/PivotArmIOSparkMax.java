@@ -1,4 +1,4 @@
-package frc.robot.subsystems.elevator;
+package frc.robot.subsystems.pivotArm;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -13,30 +13,31 @@ import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 
 import static frc.robot.Constants.ElectricalLayout.*;
-import static frc.robot.Constants.*;
-import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants.*;
+import static frc.robot.Constants.PivotArm;
+import static frc.robot.Constants.NEO_CURRENT_LIMIT;
+import static frc.robot.Constants.PivotArm.PivotArmPhysicalConstants.*;
 
-public class ElevatorIOSparkMax implements ElevatorIO {
+public class PivotArmIOSparkMax implements PivotArmIO {
     // Motor and Encoders
-    private CANSparkMax elevatorMotor;
+    private CANSparkMax pivotMotor;
     private SparkMaxPIDController pidController;
     private RelativeEncoder encoder;
     private DutyCycleEncoder absoluteEncoder;
 
     private double setpoint = 0;
 
-    public ElevatorIOSparkMax() {
-        elevatorMotor = new CANSparkMax(ELEVATOR_MOTOR_ID, MotorType.kBrushless);
-        elevatorMotor.restoreFactoryDefaults();
-        elevatorMotor.setIdleMode(IdleMode.kBrake);
-        elevatorMotor.setSmartCurrentLimit(NEO_CURRENT_LIMIT);
+    public PivotArmIOSparkMax() {
+        pivotMotor = new CANSparkMax(ELEVATOR_MOTOR_ID, MotorType.kBrushless);
+        pivotMotor.restoreFactoryDefaults();
+        pivotMotor.setIdleMode(IdleMode.kBrake);
+        pivotMotor.setSmartCurrentLimit(NEO_CURRENT_LIMIT);
 
-        pidController = elevatorMotor.getPIDController();
+        pidController = pivotMotor.getPIDController();
         pidController.setOutputRange(-1, 1);
 
-        encoder = elevatorMotor.getEncoder();
-        encoder.setPositionConversionFactor(ELEVATOR_REV_TO_POS_FACTOR);
-        encoder.setVelocityConversionFactor(ELEVATOR_REV_TO_POS_FACTOR / 60);
+        encoder = pivotMotor.getEncoder();
+        encoder.setPositionConversionFactor(PivotArm.POSITION_CONVERSION_FACTOR);
+        encoder.setVelocityConversionFactor(PivotArm.POSITION_CONVERSION_FACTOR / 60);
         encoder.setPosition(0.6);
 
         absoluteEncoder = new DutyCycleEncoder(0);
@@ -56,23 +57,23 @@ public class ElevatorIOSparkMax implements ElevatorIO {
 
     /** Updates the set of loggable inputs. */
     @Override
-    public void updateInputs(ElevatorIOInputs inputs) {
-        inputs.positionMeters = encoder.getPosition();
-        inputs.velocityMeters = encoder.getVelocity();
-        inputs.appliedVolts = elevatorMotor.getAppliedOutput() * elevatorMotor.getBusVoltage();
-        inputs.currentAmps = new double[] {elevatorMotor.getOutputCurrent()};
-        inputs.tempCelsius = new double[] {elevatorMotor.getMotorTemperature()};
+    public void updateInputs(PivotArmIOInputs inputs) {
+        inputs.angle = encoder.getPosition();
+        inputs.angleRadsPerSec = encoder.getVelocity();
+        inputs.appliedVolts = pivotMotor.getAppliedOutput() * pivotMotor.getBusVoltage();
+        inputs.currentAmps = new double[] {pivotMotor.getOutputCurrent()};
+        inputs.tempCelsius = new double[] {pivotMotor.getMotorTemperature()};
     }
 
     /** Run open loop at the specified voltage. */
     @Override
     public void setVoltage(double motorVolts) {
-        elevatorMotor.setVoltage(motorVolts);
+        pivotMotor.setVoltage(motorVolts);
     }
 
     /** Returns the current distance measurement. */
     @Override
-    public double getDistance() {
+    public double getAngle() {
         return encoder.getPosition();
     }
 
@@ -85,12 +86,12 @@ public class ElevatorIOSparkMax implements ElevatorIO {
 
     @Override
     public void setBrake(boolean brake) {
-        elevatorMotor.setIdleMode(brake ? IdleMode.kBrake : IdleMode.kCoast);
+        pivotMotor.setIdleMode(brake ? IdleMode.kBrake : IdleMode.kCoast);
     }
 
     @Override
     public boolean atSetpoint() {
-        return Math.abs(encoder.getPosition() - setpoint) < ELEVATOR_PID_TOLERANCE;
+        return Math.abs(encoder.getPosition() - setpoint) < PivotArm.PIVOT_ARM_PID_TOLERANCE;
     }
 
     @Override

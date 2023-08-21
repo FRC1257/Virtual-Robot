@@ -36,25 +36,25 @@ public final class Constants {
       public static final int kEncoderAChannel = 0;
       public static final int kEncoderBChannel = 1;
       public static final int kJoystickPort = 0;
-  
+
       public static final double kElevatorKp = 5;
       public static final double kElevatorKi = 0;
       public static final double kElevatorKd = 0;
-  
+
       public static final double kElevatorkS = 0.0; // volts (V)
       public static final double kElevatorkG = 0.762; // volts (V)
       public static final double kElevatorkV = 0.762; // volt per velocity (V/(m/s))
       public static final double kElevatorkA = 0.0; // volt per acceleration (V/(m/s²))
-  
+
       public static final double kElevatorGearing = 10.0;
       public static final double kElevatorDrumRadius = Units.inchesToMeters(2.0);
       public static final double kCarriageMass = 4.0; // kg
-  
+
       public static final double kSetpointMeters = 0.75;
       // Encoder is reset to measure 0 at the bottom, so minimum height is 0.
       public static final double kMinElevatorHeightMeters = 0.0;
       public static final double kMaxElevatorHeightMeters = 1.25;
-  
+
       // distance per pulse = (distance per revolution) / (pulses per revolution)
       // = (Pi * D) / ppr
       public static final double kElevatorEncoderDistPerPulse = 2.0 * Math.PI * kElevatorDrumRadius / 4096;
@@ -62,25 +62,72 @@ public final class Constants {
 
     public static class ElevatorPhysicalConstants {
 
-      public static final double[] ELEVATOR_PID = new double[] {0.1, 0, 0, 0};
-    
+      public static final double[] ELEVATOR_PID = new double[] { 0.1, 0, 0, 0 };
+
       // TODO Tune
       public static double ELEVATOR_PID_MAX_OUTPUT = 0.7;
-      public static double ELEVATOR_REV_TO_POS_FACTOR = 1; 
+      public static double ELEVATOR_REV_TO_POS_FACTOR = 1;
 
       public static double ELEVATOR_PID_TOLERANCE = 3;
-    
+
       // TODO Tune
       public static final double ELEVATOR_SETPOINT_RETRACT = 0;
       public static final double ELEVATOR_SETPOINT_EXTEND = 32;
-    
+
       public static final double ELEVATOR_SETPOINT_MIDDLE = (ELEVATOR_SETPOINT_RETRACT + ELEVATOR_SETPOINT_EXTEND) / 2;
-    
+
       public static final double ELEVATOR_STOP_BUFFER = 5;
     }
 
     public static final double ELEVATOR_TOLERANCE = 3;
 
+  }
+
+  public static class PivotArm {
+    // PID constants
+    public static double[] PIVOT_ARM_PID = new double[] { 0.25, 0, 0, 0 };
+    public static double PIVOT_ARM_PID_TOLERANCE = 1;
+    public static double PIVOT_ARM_PID_MAX_OUTPUT = 1;
+
+    public static double POSITION_CONVERSION_FACTOR = 1;
+
+    // Setpoints between -1 and 1
+    public static double PIVOT_ARM_SETPOINT_UP = 135;
+    public static double PIVOT_ARM_SETPOINT_MID = 175;
+    // public static double PIVOT_ARM_SETPOINT_INTAKE = 0; // also used for low
+    // score
+    public static double PIVOT_ARM_SETPOINT_HOLD = 10;
+    public static final double PIVOT_ARM_SETPOINT_BOTTOM = 0;
+    public static final double PIVOT_ARM_SETPOINT_TOP = 170;
+
+    public static class PivotArmPhysicalConstants {
+      public static final double PIVOT_ARM_TOLERANCE = 3;
+      public static final double PIVOT_ARM_STOP_BUFFER = 5;
+    }
+
+    public static class PivotArmSimConstants {
+      public static final int kMotorPort = 0;
+      public static final int kEncoderAChannel = 0;
+      public static final int kEncoderBChannel = 1;
+      public static final int kJoystickPort = 0;
+
+      public static final String kArmPositionKey = "ArmPosition";
+      public static final String kArmPKey = "ArmP";
+
+      // The P gain for the PID controller that drives this arm.
+      public static final double kDefaultArmKp = 50.0;
+      public static final double kDefaultArmSetpointDegrees = 75.0;
+
+      // distance per pulse = (angle per revolution) / (pulses per revolution)
+      // = (2 * PI rads) / (4096 pulses)
+      public static final double kArmEncoderDistPerPulse = 2.0 * Math.PI / 4096;
+
+      public static final double kArmReduction = 200;
+      public static final double kArmMass = 8.0; // Kilograms
+      public static final double kArmLength = Units.inchesToMeters(30);
+      public static final double kMinAngleRads = Units.degreesToRadians(-75);
+      public static final double kMaxAngleRads = Units.degreesToRadians(255);
+    }
   }
 
   public static class Drivetrain {
@@ -144,10 +191,12 @@ public final class Constants {
     public final static int CONTROLLER_OPERATOR_ID = 1;
 
     // Drivetrain Test Bot
-    /* public final static int DRIVE_FRONT_LEFT = 17;
-    public final static int DRIVE_FRONT_RIGHT = 10;
-    public final static int DRIVE_BACK_LEFT = 9;
-    public final static int DRIVE_BACK_RIGHT = 11; */
+    /*
+     * public final static int DRIVE_FRONT_LEFT = 17;
+     * public final static int DRIVE_FRONT_RIGHT = 10;
+     * public final static int DRIVE_BACK_LEFT = 9;
+     * public final static int DRIVE_BACK_RIGHT = 11;
+     */
 
     // Drivetrain Main
     public final static int DRIVE_FRONT_LEFT = 1;
@@ -157,7 +206,7 @@ public final class Constants {
 
     // Intakes
     public final static int INTAKE_MOTOR_ID = 9;
-    
+
     public static final int INTAKE_ARM_MOTOR_LEFT_ID = 6;
     public static final int INTAKE_ARM_MOTOR_RIGHT_ID = 8;
 
@@ -173,7 +222,7 @@ public final class Constants {
     // Sensors
     public static final int INTAKE_BUMP_SWITCH_ID = 24;
     public static final int ELEVATOR_LIMIT_SWITCH = 0;
-};
+  };
 
   public static double PI = 3.141592653589793238462643;
   public static double UPDATE_PERIOD = 0.010; // seconds
