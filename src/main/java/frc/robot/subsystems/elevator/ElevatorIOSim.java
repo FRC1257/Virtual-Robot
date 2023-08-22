@@ -41,7 +41,7 @@ public class ElevatorIOSim implements ElevatorIO {
             kElevatorDrumRadius,
             kMinElevatorHeightMeters,
             kMaxElevatorHeightMeters,
-            true,
+            false,
             VecBuilder.fill(0.01)
         );
 

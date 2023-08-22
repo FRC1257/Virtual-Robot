@@ -47,6 +47,7 @@ public class Drive extends SubsystemBase {
   /** Creates a new Drive. */
   public Drive(DriveIO io, Pose2d initialPoseMeters) {
     this.io = io;
+    SmartDashboard.putData(getName(), this);
     SmartDashboard.putData("Field", m_field);
     poseEstimator = new DifferentialDrivePoseEstimator(driveKinematics, Rotation2d.fromDegrees(-Gyro.getInstance().getRobotAngle()), io.getLeftPositionMeters(), io.getRightPositionMeters(), initialPoseMeters);
   }

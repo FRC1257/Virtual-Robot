@@ -43,6 +43,7 @@ public class PivotArm extends SubsystemBase {
 
     public PivotArm(PivotArmIO io) {
         this.io = io;
+        SmartDashboard.putData(getName(), this);
     }
 
     @Override
@@ -115,7 +116,7 @@ public class PivotArm extends SubsystemBase {
     }
 
     public MechanismLigament2d getArmMechanism() {
-        return new MechanismLigament2d("Pivot Arm", 23, 0, 5, new Color8Bit(Color.kAqua));
+        return new MechanismLigament2d("Pivot Arm", 2, 0, 5, new Color8Bit(Color.kAqua));
     }
     
 }

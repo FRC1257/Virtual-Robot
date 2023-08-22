@@ -2,6 +2,7 @@ package frc.robot.subsystems.claw;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -13,6 +14,7 @@ public class Claw extends SubsystemBase {
 
     public Claw(ClawIO io) {
         this.io = io;
+        SmartDashboard.putData(getName(), this);
         io.setBrakeMode(true);
     }
 

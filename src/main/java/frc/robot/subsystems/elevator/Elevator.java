@@ -41,6 +41,11 @@ public class Elevator extends SubsystemBase {
 
     public Elevator(ElevatorIO io) {
         this.io = io;
+        SmartDashboard.putData(getName(), this);
+    }
+
+    public double highSetpoint() {
+        return io.ELEVATOR_MAX_HEIGHT;
     }
 
     @Override
@@ -103,7 +108,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public MechanismLigament2d getElevatorMechanism() {
-        return new MechanismLigament2d("Elevator", 30, 36, 5, new Color8Bit(Color.kOrange));
+        return new MechanismLigament2d("Elevator", 5, 36, 5, new Color8Bit(Color.kOrange));
     }
 
     public Command PIDCommand(double setpoint) {

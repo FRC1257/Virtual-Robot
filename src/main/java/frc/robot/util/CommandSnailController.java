@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class CommandSnailController extends CommandXboxController {
     public CommandSnailController(int port) {
@@ -20,17 +21,33 @@ public class CommandSnailController extends CommandXboxController {
 
     public double getDriveTurn() {
         if (a().getAsBoolean()) {
-            return applyDeadband(getLeftX());
+            return -applyDeadband(getLeftX());
         } else if (rightBumper().getAsBoolean()) {
-            return applyDeadband(getLeftX());
+            return -applyDeadband(getLeftX());
         } else if (leftTrigger().getAsBoolean()) {
-            return applyDeadband(getRightX());
+            return -applyDeadband(getRightX());
         }
         return 0;
     }
 
     public double getElevatorSpeed() {
         return getLeftTriggerAxis() - getRightTriggerAxis();
+    }
+
+    public Trigger getX() {
+        return x();
+    }
+
+    public Trigger getY() {
+        return y();
+    }
+
+    public Trigger getA() {
+        return a();
+    }
+
+    public Trigger getB() {
+        return b();
     }
 
     //these two commands work together to get input from the joystick to control the robot

@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Gyro {
 
-    private static Gyro instance = null;
+    private static Gyro instance = new Gyro();
 
     private final AHRS navx;
     private double resetRoll;

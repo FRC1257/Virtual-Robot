@@ -58,7 +58,7 @@ public class PivotArmIOSim implements PivotArmIO {
     @Override
     public void updateInputs(PivotArmIOInputs inputs) {
         sim.update(0.02);
-        inputs.angle = sim.getAngleRads();
+        inputs.angle = getAngle();
         inputs.angleRadsPerSec = sim.getVelocityRadPerSec();
         inputs.currentAmps = new double[] {sim.getCurrentDrawAmps()};
         
@@ -80,13 +80,12 @@ public class PivotArmIOSim implements PivotArmIO {
         double pidOutput = m_controller.calculate(m_encoder.getDistance());
         double feedforwardOutput = 0; // m_feedforward.calculate(m_controller.getSetpoint().velocity);
 
-
         sim.setInputVoltage(feedforwardOutput + pidOutput);
     }
 
     @Override
     public double getAngle() {
-        return sim.getAngleRads();
+        return Units.radiansToDegrees(sim.getAngleRads()) - 36;
     }
 
     @Override

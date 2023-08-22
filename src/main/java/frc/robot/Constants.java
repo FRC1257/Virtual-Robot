@@ -53,7 +53,7 @@ public final class Constants {
       public static final double kSetpointMeters = 0.75;
       // Encoder is reset to measure 0 at the bottom, so minimum height is 0.
       public static final double kMinElevatorHeightMeters = 0.0;
-      public static final double kMaxElevatorHeightMeters = 1.25;
+      public static final double kMaxElevatorHeightMeters = 2.25;
 
       // distance per pulse = (distance per revolution) / (pulses per revolution)
       // = (Pi * D) / ppr
@@ -106,9 +106,9 @@ public final class Constants {
     }
 
     public static class PivotArmSimConstants {
-      public static final int kMotorPort = 0;
-      public static final int kEncoderAChannel = 0;
-      public static final int kEncoderBChannel = 1;
+      public static final int kMotorPort = 2;
+      public static final int kEncoderAChannel = 2;
+      public static final int kEncoderBChannel = 3;
       public static final int kJoystickPort = 0;
 
       public static final String kArmPositionKey = "ArmPosition";
@@ -123,9 +123,9 @@ public final class Constants {
       public static final double kArmEncoderDistPerPulse = 2.0 * Math.PI / 4096;
 
       public static final double kArmReduction = 200;
-      public static final double kArmMass = 8.0; // Kilograms
-      public static final double kArmLength = Units.inchesToMeters(30);
-      public static final double kMinAngleRads = Units.degreesToRadians(-75);
+      public static final double kArmMass = 5.0; // Kilograms
+      public static final double kArmLength = Units.inchesToMeters(20);
+      public static final double kMinAngleRads = Units.degreesToRadians(-175);
       public static final double kMaxAngleRads = Units.degreesToRadians(255);
       public static double kEncoderDistancePerPulse;
     }
@@ -144,9 +144,9 @@ public final class Constants {
     public static double CLAW_OPEN_TIME = 2.0;
     public static double CLAW_CLOSE_TIME = 2.20;
 
-    public static class PivotArmSimConstants {
-      public static final double kEncoderAChannel = 3;
-      public static final double kEncoderBChannel = 5;
+    public static class ClawSimConstants {
+      public static final int kEncoderAChannel = 4;
+      public static final int kEncoderBChannel = 5;
       public static final double kEncoderDistancePerPulse = 3;
 
     }

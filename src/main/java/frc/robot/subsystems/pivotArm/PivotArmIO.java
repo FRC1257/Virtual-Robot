@@ -12,8 +12,8 @@ public interface PivotArmIO {
         public double[] tempCelsius = new double[] {};
     }
 
-    public double PIVOT_ARM_MAX_ANGLE = 270.0;
-    public double PIVOT_ARM_MIN_ANGLE = 0.0;
+    public double PIVOT_ARM_MAX_ANGLE = 150.0;
+    public double PIVOT_ARM_MIN_ANGLE = -30.0;
 
     /** Updates the set of loggable inputs. */
     public default void updateInputs(PivotArmIOInputs inputs) {

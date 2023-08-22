@@ -12,7 +12,7 @@ public interface ElevatorIO {
         public double[] tempCelsius = new double[] {};
     }
 
-    public double ELEVATOR_MAX_HEIGHT = 0.0;
+    public double ELEVATOR_MAX_HEIGHT = 36.0;
     public double ELEVATOR_MIN_HEIGHT = 0.0;
 
     /** Updates the set of loggable inputs. */

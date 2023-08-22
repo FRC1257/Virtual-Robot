@@ -31,6 +31,7 @@ import frc.robot.subsystems.pivotArm.PivotArmIOSparkMax;
 import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants;
 
 import frc.robot.util.CommandSnailController;
+import frc.robot.util.Gyro;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -42,6 +43,7 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -59,6 +61,7 @@ public class RobotContainer {
   private final Elevator elevator;
   private final PivotArm pivotArm;
   private final Claw claw;
+  private final Gyro gyro = Gyro.getInstance();
 
   private Mechanism2d mech = new Mechanism2d(3, 3);
 
@@ -128,20 +131,22 @@ public class RobotContainer {
    * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    // Clear old buttons
+    // CommandScheduler.getInstance().getActiveButtonLoop().clear();
     drive.setDefaultCommand(
         new RunCommand(() -> drive.driveArcade(driver.getDriveForward(), driver.getDriveTurn()), drive));
     elevator.setDefaultCommand(
         new RunCommand(() -> elevator.move(operator.getElevatorSpeed()), elevator));
-    operator.y().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND));
-    operator.a().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_RETRACT));
+    operator.getY().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND));
+    operator.getA().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_RETRACT));
 
     // configures the subsystem's default command which is a lambda that moves the
     // subsystem based on the controller's input
     pivotArm.setDefaultCommand(
         new RunCommand(() -> pivotArm.move(operator.getLeftY()), pivotArm));
     // these are triggers that run the subsystem's command
-    operator.b().onTrue(pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_TOP));
-    operator.x().onTrue(pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_BOTTOM));
+    operator.getB().onTrue(pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_TOP));
+    operator.getX().onTrue(pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_BOTTOM));
 
     operator.leftBumper().onTrue(claw.grab());
     operator.rightBumper().onTrue(claw.release());
