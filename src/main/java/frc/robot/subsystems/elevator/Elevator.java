@@ -31,7 +31,6 @@ public class Elevator extends SubsystemBase {
     private LoggedDashboardNumber d = new LoggedDashboardNumber("Elevator/D", ELEVATOR_PID[2]);
     private LoggedDashboardNumber ff = new LoggedDashboardNumber("Elevator/FF", ELEVATOR_PID[3]);
 
-
     private State state = State.MANUAL;
     private double setpoint = 0;
 
@@ -47,6 +46,8 @@ public class Elevator extends SubsystemBase {
     @Override
     public void periodic() {
         io.updateInputs(inputs);
+        Logger.getInstance().processInputs("Elevator", inputs);
+
         ElevatorMechanism.setLength(io.getDistance());
 
         // Update the PID constants if they have changed
@@ -67,11 +68,18 @@ public class Elevator extends SubsystemBase {
     }
 
     public void setVoltage(double motorVolts) {
+        // limit the elevator if its past its limit
+        if (io.getDistance() > io.ELEVATOR_MAX_HEIGHT && motorVolts > 0) {
+            motorVolts = 0;
+        } else if (io.getDistance() < io.ELEVATOR_MIN_HEIGHT && motorVolts < 0) {
+            motorVolts = 0;
+        }
+
         io.setVoltage(motorVolts);
     }
 
     public void move(double speed) {
-        io.setVoltage(speed * 12);
+        setVoltage(speed * 12);
     }
 
     public void runPID() {
@@ -99,10 +107,13 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command PIDCommand(double setpoint) {
-        return this.run(() -> {
-            setPID(setpoint);
-            this.io.goToSetpoint(setpoint);
-        });
+        return new FunctionalCommand(
+            () -> setPID(setpoint), 
+            () -> runPID(), 
+            (stop) -> move(0), 
+            this::atSetpoint, 
+            this
+        );
     }
     
 }

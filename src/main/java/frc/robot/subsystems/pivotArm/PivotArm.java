@@ -48,6 +48,8 @@ public class PivotArm extends SubsystemBase {
     @Override
     public void periodic() {
         io.updateInputs(inputs);
+        Logger.getInstance().processInputs("PivotArm", inputs);
+
         armMechanism.setAngle(inputs.angle);
 
         // Update the PID constants if they have changed
@@ -68,11 +70,18 @@ public class PivotArm extends SubsystemBase {
     }
 
     public void setVoltage(double motorVolts) {
+        // limit the arm if its past the limit
+        if (io.getAngle() > io.PIVOT_ARM_MAX_ANGLE && motorVolts > 0) {
+            motorVolts = 0;
+        } else if (io.getAngle() < io.PIVOT_ARM_MIN_ANGLE && motorVolts < 0) {
+            motorVolts = 0;
+        }
+        
         io.setVoltage(motorVolts);
     }
 
     public void move(double speed) {
-        io.setVoltage(speed * 12);
+        setVoltage(speed * 12);
     }
 
     public void runPID() {
@@ -88,10 +97,13 @@ public class PivotArm extends SubsystemBase {
     }
 
     public Command PIDCommand(double setpoint) {
-        return this.run(() -> {
-            setPID(setpoint);
-            this.io.goToSetpoint(setpoint);
-        });
+        return new FunctionalCommand(
+            () -> setPID(setpoint), 
+            () -> runPID(), 
+            (stop) -> move(0), 
+            this::atSetpoint, 
+            this
+        );
     }
 
     public void setMechanism(MechanismLigament2d mechanism) {

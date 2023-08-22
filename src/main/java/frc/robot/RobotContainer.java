@@ -11,6 +11,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.commands.SpinAuto;
+import frc.robot.subsystems.claw.Claw;
+import frc.robot.subsystems.claw.ClawIO;
+import frc.robot.subsystems.claw.ClawIOSim;
+import frc.robot.subsystems.claw.ClawIOSparkMax;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOSim;
@@ -29,9 +33,15 @@ import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants;
 import frc.robot.util.CommandSnailController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj.XboxController.Button;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -48,6 +58,7 @@ public class RobotContainer {
   private final Drive drive;
   private final Elevator elevator;
   private final PivotArm pivotArm;
+  private final Claw claw;
 
   private Mechanism2d mech = new Mechanism2d(3, 3);
 
@@ -71,6 +82,7 @@ public class RobotContainer {
         drive = new Drive(new DriveIOSparkMax(), new Pose2d());
         elevator = new Elevator(new ElevatorIOSparkMax());
         pivotArm = new PivotArm(new PivotArmIOSparkMax());
+        claw = new Claw(new ClawIOSparkMax());
         // drive = new Drive(new DriveIOFalcon500());
         // flywheel = new Flywheel(new FlywheelIOFalcon500());
         break;
@@ -80,6 +92,7 @@ public class RobotContainer {
         drive = new Drive(new DriveIOSim(), new Pose2d());
         elevator = new Elevator(new ElevatorIOSim());
         pivotArm = new PivotArm(new PivotArmIOSim());
+        claw = new Claw(new ClawIOSim());
         break;
 
       // Replayed robot, disable IO implementations
@@ -89,6 +102,8 @@ public class RobotContainer {
         elevator = new Elevator(new ElevatorIO() {
         });
         pivotArm = new PivotArm(new PivotArmIO() {
+        });
+        claw = new Claw(new ClawIO() {
         });
         break;
     }
@@ -127,6 +142,57 @@ public class RobotContainer {
     // these are triggers that run the subsystem's command
     operator.b().onTrue(pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_TOP));
     operator.x().onTrue(pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_BOTTOM));
+
+    operator.leftBumper().onTrue(claw.grab());
+    operator.rightBumper().onTrue(claw.release());
+  }
+
+  public CommandBase scoreHigh() {
+    return new SequentialCommandGroup(
+        new ParallelCommandGroup(
+            claw.grab(),
+            pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_TOP),
+            elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND)),
+        new WaitCommand(1),
+        claw.release());
+  }
+
+  public CommandBase scoreMid() {
+    return new SequentialCommandGroup(
+        new ParallelCommandGroup(
+            claw.grab(),
+            pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_MID),
+            elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND)),
+        new WaitCommand(1),
+        claw.release());
+  }
+
+  public CommandBase scoreLow() {
+    return new SequentialCommandGroup(
+        new ParallelCommandGroup(
+            claw.grab(),
+            pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_BOTTOM),
+            elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND)),
+        new WaitCommand(1),
+        claw.release());
+  }
+
+  public CommandBase holdPos() {
+    return new RunCommand(() -> {
+      claw.release().schedule();
+      pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_HOLD).schedule();
+      elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_RETRACT).schedule();
+    }, claw, pivotArm, elevator);
+  }
+
+  public CommandBase grabStation() {
+    return new SequentialCommandGroup(
+        new ParallelCommandGroup(
+            claw.release(),
+            pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_TOP),
+            elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND)),
+        new WaitCommand(1), // back up and then grab
+        claw.grab());
   }
 
   /**

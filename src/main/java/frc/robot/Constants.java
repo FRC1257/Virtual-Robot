@@ -127,8 +127,30 @@ public final class Constants {
       public static final double kArmLength = Units.inchesToMeters(30);
       public static final double kMinAngleRads = Units.degreesToRadians(-75);
       public static final double kMaxAngleRads = Units.degreesToRadians(255);
+      public static double kEncoderDistancePerPulse;
     }
   }
+
+  public static class Claw {
+    /* public static double[] CLAW_PID = new double[] {0, 0, 0, 0};
+    public static double CLAW_PID_TOLERANCE = 0.1257; // lol
+    public static double CLAW_PID_MAX_OUTPUT = 0.1257; // lol */
+
+    public static double CLAW_CLOSED_SPEED = 0.5;
+    public static double CLAW_OPEN_SPEED = -0.5;
+
+    public static double POSITION_CONVERSION_FACTOR = 1;
+
+    public static double CLAW_OPEN_TIME = 2.0;
+    public static double CLAW_CLOSE_TIME = 2.20;
+
+    public static class PivotArmSimConstants {
+      public static final double kEncoderAChannel = 3;
+      public static final double kEncoderBChannel = 5;
+      public static final double kEncoderDistancePerPulse = 3;
+
+    }
+};
 
   public static class Drivetrain {
     // drivetrain constants
@@ -212,6 +234,7 @@ public final class Constants {
 
     // Claw
     public final static int CLAW_MOTOR_LEFT_ID = 10;
+    public final static int CLAW_PIECE_BUTTON = 0;
 
     // New Elevator Motor Design
     public final static int ELEVATOR_MOTOR_ID = 5;
