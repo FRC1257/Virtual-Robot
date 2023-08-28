@@ -33,4 +33,9 @@ public interface DriveIO {
   public default void zero() {}
 
   public default void setVelocity(DifferentialDriveWheelSpeeds wheelSpeeds) {}
+
+  public default double getTrackWidth() {
+    return 0.0;
+  };
+
 }

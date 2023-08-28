@@ -1,17 +1,26 @@
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotGearing;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotMotor;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotWheelSize;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import static frc.robot.Constants.Drivetrain.DRIVE_TRAJ_MAX_VEL;
+import static frc.robot.Constants.Drivetrain.*;
 
 public class DriveIOSim implements DriveIO {
-  private DifferentialDrivetrainSim sim = DifferentialDrivetrainSim.createKitbotSim(KitbotMotor.kDualCIMPerSide,
-      KitbotGearing.k10p71, KitbotWheelSize.kSixInch, null);
+  /* double batteryMoi = 12.5 / 2.2 * Math.pow(Units.inchesToMeters(10), 2);
+  double gearboxMoi =
+      (2.8 * 2 / 2.2 + 2.0 ) * Math.pow(Units.inchesToMeters(26.0 / 2.0), 2); */
+  // private DifferentialDrivetrainSim sim = new DifferentialDrivetrainSim(KitbotMotor.kDoubleNEOPerSide.value, KitbotGearing.k10p71.value, Units.lbsToKilograms(60), batteryMoi + gearboxMoi, DRIVE_WHEEL_DIAM_M, DRIVE_TRACK_WIDTH_M, null);
+  private DifferentialDrivetrainSim sim = DifferentialDrivetrainSim.createKitbotSim(KitbotMotor.kDoubleNEOPerSide, KitbotGearing.k10p71, KitbotWheelSize.kSixInch, null);
+
+  private PIDController leftController = new PIDController(5, 0, 0);
+  private PIDController rightController = new PIDController(5, 0, 0);
 
   @Override
   public void updateInputs(DriveIOInputs inputs) {
@@ -40,12 +49,18 @@ public class DriveIOSim implements DriveIO {
 
   @Override
   public void setVelocity(DifferentialDriveWheelSpeeds wheelSpeeds) {
-    sim.setInputs(wheelSpeeds.leftMetersPerSecond * 12 / DRIVE_TRAJ_MAX_VEL,
-        wheelSpeeds.rightMetersPerSecond * 12 / DRIVE_TRAJ_MAX_VEL);
+    leftController.setSetpoint(wheelSpeeds.leftMetersPerSecond);
+    rightController.setSetpoint(wheelSpeeds.rightMetersPerSecond);
+    setVoltage(leftController.calculate(sim.getLeftVelocityMetersPerSecond()), rightController.calculate(sim.getRightVelocityMetersPerSecond()));
   }
 
   @Override
   public void zero() {
     
+  }
+
+  @Override
+  public double getTrackWidth() {
+    return Units.inchesToMeters(26);
   }
 }

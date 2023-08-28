@@ -10,7 +10,9 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.commands.GenerateOnTheFly;
 import frc.robot.commands.SpinAuto;
+import frc.robot.commands.ToPose;
 import frc.robot.subsystems.claw.Claw;
 import frc.robot.subsystems.claw.ClawIO;
 import frc.robot.subsystems.claw.ClawIOSim;
@@ -31,7 +33,9 @@ import frc.robot.subsystems.pivotArm.PivotArmIOSparkMax;
 import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants;
 
 import frc.robot.util.CommandSnailController;
+import frc.robot.util.FieldConstants;
 import frc.robot.util.Gyro;
+import frc.robot.util.TrajectoryManager;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -62,6 +66,8 @@ public class RobotContainer {
   private final PivotArm pivotArm;
   private final Claw claw;
   private final Gyro gyro = Gyro.getInstance();
+
+  private final TrajectoryManager manager;
 
   private Mechanism2d mech = new Mechanism2d(3, 3);
 
@@ -120,6 +126,8 @@ public class RobotContainer {
     autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
     autoChooser.addOption("Spin", new SpinAuto(drive));
 
+    manager = new TrajectoryManager(drive);
+
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -150,6 +158,13 @@ public class RobotContainer {
 
     operator.leftBumper().onTrue(claw.grab());
     operator.rightBumper().onTrue(claw.release());
+
+    driver.rightBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos, manager));
+    driver.leftBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos2, manager));
+    // cancel trajectory
+    driver.getY().onTrue(drive.endTrajectoryCommand());
+    // driver.start().onTrue(drive.turnAngleCommand(45));
+    driver.start().onTrue(new InstantCommand(() -> manager.scheduleGoToPos(FieldConstants.BLUE_CHARGE_POSE[0])));
   }
 
   public CommandBase scoreHigh() {

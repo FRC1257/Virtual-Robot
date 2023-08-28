@@ -169,10 +169,23 @@ public final class Constants {
     public static double DRIVE_CLOSED_MAX_ACC = 1.5; // m/s^2
 
     // trajectory following
-    public static double DRIVE_TRAJ_MAX_VEL = 4.0; // m/s
-    public static double DRIVE_TRAJ_MAX_ACC = 0.515; // .75; // m/s^2
+    public static double DRIVE_TRAJ_MAX_VEL = 8.0; // m/s
+    public static double DRIVE_TRAJ_MAX_ACC = 0.7515; // .75; // m/s^2
     public static double DRIVE_TRAJ_RAMSETE_B = 2.0; // don't change
     public static double DRIVE_TRAJ_RAMSETE_ZETA = 0.7;
+
+    public static double DRIVE_TRAJ_KV = 0.0; // don't change
+    public static double DRIVE_TRAJ_KA = 0.0; // don't change
+    public static double DRIVE_TRAJ_KS = 0.0; // don't change
+
+    // These are example values only - DO NOT USE THESE FOR YOUR OWN ROBOT!
+    // These characterization values MUST be determined either experimentally or theoretically
+    // for *your* robot's drive.
+    // The Robot Characterization Toolsuite provides a convenient tool for obtaining these
+    // values for your robot.
+    public static final double ksVolts = 0.22;
+    public static final double kvVoltSecondsPerMeter = 1.98;
+    public static final double kaVoltSecondsSquaredPerMeter = 0.2;
 
     // aligning
     public static double DRIVE_ALIGN_MAX_VEL = 0.75; // m/s
@@ -185,7 +198,7 @@ public final class Constants {
     public static double DRIVE_DIST_MAX_OUTPUT = 0.6;
 
     // angular position PID works for test bot
-    public static double[] DRIVE_ANGLE_PID = { 0.055, 0.1, 0.005 };
+    public static double[] DRIVE_ANGLE_PID = { 0.045, 0.1, 0.005 }; // 0.055
     public static double DRIVE_ANGLE_TOLERANCE = 0.5;
     public static double DRIVE_ANGLE_MAX_OUTPUT = 0.6;
 

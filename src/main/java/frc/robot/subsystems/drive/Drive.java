@@ -2,7 +2,14 @@ package frc.robot.subsystems.drive;
 
 import org.littletonrobotics.junction.Logger;
 
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.commands.FollowPathWithEvents;
+import com.pathplanner.lib.commands.PPRamseteCommand;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.RamseteController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -16,8 +23,19 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RamseteCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import static frc.robot.Constants.Drivetrain.*;
+
+import java.util.Map;
+
+import frc.robot.util.ArcadeDrive;
 import frc.robot.util.Gyro;
 
 public class Drive extends SubsystemBase {
@@ -31,14 +49,18 @@ public class Drive extends SubsystemBase {
 
   private RamseteController ramseteController = new RamseteController(DRIVE_TRAJ_RAMSETE_B, DRIVE_TRAJ_RAMSETE_ZETA);
   private Trajectory trajectory;
-  private Timer pathTimer;
+  private Timer pathTimer = new Timer();
 
-  private DifferentialDriveKinematics driveKinematics = new DifferentialDriveKinematics(DRIVE_TRACK_WIDTH_M);
+  private PIDController turnController = new PIDController(DRIVE_ANGLE_PID[0], DRIVE_ANGLE_PID[1], DRIVE_ANGLE_PID[2]);
+  private double angleTarget = 0.0;
+
+  private DifferentialDriveKinematics driveKinematics;
   private final DifferentialDrivePoseEstimator poseEstimator;
 
   public enum States {
     MANUAL,
-    TRAJECTORY
+    TRAJECTORY,
+    TURN_ANGLE
   }
 
   private States defaultState = States.MANUAL;
@@ -47,9 +69,13 @@ public class Drive extends SubsystemBase {
   /** Creates a new Drive. */
   public Drive(DriveIO io, Pose2d initialPoseMeters) {
     this.io = io;
+
+    driveKinematics = new DifferentialDriveKinematics(io.getTrackWidth());
     SmartDashboard.putData(getName(), this);
     SmartDashboard.putData("Field", m_field);
-    poseEstimator = new DifferentialDrivePoseEstimator(driveKinematics, Rotation2d.fromDegrees(-Gyro.getInstance().getRobotAngle()), io.getLeftPositionMeters(), io.getRightPositionMeters(), initialPoseMeters);
+    poseEstimator = new DifferentialDrivePoseEstimator(driveKinematics,
+        Rotation2d.fromDegrees(-Gyro.getInstance().getRobotAngle()), io.getLeftPositionMeters(),
+        io.getRightPositionMeters(), initialPoseMeters);
   }
 
   @Override
@@ -69,6 +95,10 @@ public class Drive extends SubsystemBase {
     io.setVoltage(leftPercent * 12.0, rightPercent * 12.0);
   }
 
+  public DifferentialDriveKinematics getKinematics() {
+    return driveKinematics;
+  }
+
   /** Run open loop based on stick positions. */
   public void driveArcade(double xSpeed, double zRotation) {
     var speeds = DifferentialDrive.arcadeDriveIK(xSpeed, zRotation, true);
@@ -76,37 +106,50 @@ public class Drive extends SubsystemBase {
   }
 
   public void followTrajectory() {
-    if(trajectory == null) {
+    if (trajectory == null || state != States.TRAJECTORY) {
       state = defaultState;
+      stop();
       return;
     }
 
-    if(pathTimer.get() > trajectory.getTotalTimeSeconds()) {
+    if (pathTimer.get() > trajectory.getTotalTimeSeconds()) {
       pathTimer.stop();
       pathTimer.reset();
-      trajectory = null;
 
       // stop the bot
       stop();
-      state = defaultState;
       return;
     }
 
     Trajectory.State currentState = trajectory.sample(pathTimer.get());
-    
-    ChassisSpeeds chassisSpeeds = ramseteController.calculate(poseEstimator.getEstimatedPosition(), currentState); 
+
+    ChassisSpeeds chassisSpeeds = ramseteController.calculate(getPose(), currentState);
     DifferentialDriveWheelSpeeds wheelSpeeds = driveKinematics.toWheelSpeeds(chassisSpeeds);
 
     io.setVelocity(wheelSpeeds);
   }
 
+  public void endTrajectory() {
+    trajectory = null;
+    state = defaultState;
+    stop();
+  }
+
+  public CommandBase endTrajectoryCommand() {
+    return new InstantCommand(() -> endTrajectory(), this);
+  }
+
   public void driveTrajectory(Trajectory trajectory) {
+    if (trajectory == null) {
+      return;
+    }
+
     zero();
     setRobotPose(trajectory.getInitialPose());
 
     this.trajectory = trajectory;
 
-    m_field.getObject("traj").setTrajectory(trajectory);       
+    m_field.getObject("traj").setTrajectory(trajectory);
 
     pathTimer.reset();
     pathTimer.start();
@@ -115,11 +158,15 @@ public class Drive extends SubsystemBase {
   }
 
   private void setRobotPose(Pose2d pose) {
-    poseEstimator.resetPosition(Rotation2d.fromDegrees(-Gyro.getInstance().getRobotAngle()), io.getLeftPositionMeters(), io.getRightPositionMeters(), pose);
+    poseEstimator.resetPosition(Rotation2d.fromDegrees(-Gyro.getInstance().getRobotAngle()), io.getLeftPositionMeters(),
+        io.getRightPositionMeters(), pose);
   }
 
   /** Stops the drive. */
   public void stop() {
+    state = States.MANUAL;
+    trajectory = null;
+    angleTarget = 0.0;
     io.setVoltage(0.0, 0.0);
   }
 
@@ -131,6 +178,10 @@ public class Drive extends SubsystemBase {
   /** Returns the current odometry pose in meters. */
   public Pose2d getPose() {
     return odometry.getPoseMeters();
+  }
+
+  public double getVelocityMetersPerSecond() {
+    return (getLeftVelocityMeters() + getRightVelocityMeters()) / 2.0;
   }
 
   /** Returns the position of the left wheels in meters. */
@@ -152,4 +203,173 @@ public class Drive extends SubsystemBase {
   public double getRightVelocityMeters() {
     return inputs.rightVelocityRadPerSec * WHEEL_RADIUS_METERS;
   }
+
+  public boolean isTrajectoryFinished() {
+    return state != States.TRAJECTORY;
+  }
+
+  public void resetOdometry(Pose2d pose) {
+    odometry.resetPosition(new Rotation2d(Gyro.getInstance().getYawAngle()), getLeftPositionMeters(),
+        getRightPositionMeters(), pose);
+  }
+
+  public CommandBase driveTrajectoryCommand(Trajectory trajectory) {
+    return new FunctionalCommand(
+        () -> driveTrajectory(trajectory),
+        () -> followTrajectory(),
+        (a) -> stop(),
+        this::isTrajectoryFinished,
+        this);
+  }
+
+  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+    return new DifferentialDriveWheelSpeeds(getLeftVelocityMeters(), getRightVelocityMeters());
+  }
+
+  public void outputVolts(double leftVolts, double rightVolts) {
+    io.setVoltage(leftVolts, rightVolts);
+  }
+
+  public void setTurnStart(double angle) {
+    setTurnAngle((getPose().getRotation().getDegrees() + angle + 360) % 360);
+  }
+
+  public void setTurnAngle(double angle) {
+    stop();
+    angleTarget = angle;
+    state = States.TURN_ANGLE;
+    turnController.reset();
+    turnController.setSetpoint(chooseClosestTarget());
+    turnController.setTolerance(0.5);
+    
+  }
+
+  public double chooseClosestTarget() {
+    double currentAngle = getPose().getRotation().getDegrees();
+    double targetAngle = angleTarget;
+    double negativeTargetAngle = angleTarget - 360;
+
+    double currentError = Math.abs(currentAngle - targetAngle);
+    double negativeError = Math.abs(currentAngle - negativeTargetAngle);
+
+    if (currentError < negativeError) {
+      return targetAngle;
+    } else {
+      return negativeTargetAngle;
+    }
+  }
+
+  public void driveTurn() {
+    // comment this out while initially tuning
+    
+
+
+    /*
+     * if (pathTimer.get() > 10) {
+     * DriverStation.reportError("Turn Command ended", false);
+     * state = defaultState;
+     * angleSetpoint = defaultSetpoint;
+     * frontLeftMotor.set(0);
+     * frontRightMotor.set(0);
+     * break;
+     * }
+     */
+
+    double turnOutput = -turnController.calculate(getPose().getRotation().getDegrees(), chooseClosestTarget());
+
+    if (turnController.atSetpoint() && turnController.getVelocityError() < 1
+        && turnController.getVelocityError() != 0) {
+      state = defaultState;
+      angleTarget = 0;
+      stop();
+      return;
+    }
+
+    turnOutput = MathUtil.clamp(turnOutput, -DRIVE_ANGLE_MAX_OUTPUT, DRIVE_ANGLE_MAX_OUTPUT);
+
+    double[] arcadeSpeeds = ArcadeDrive.arcadeDrive(0, turnOutput);
+    io.setVoltage(arcadeSpeeds[0] * 12.0, arcadeSpeeds[1] * 12.0);
+  }
+
+  public boolean isTurningFinished() {
+    return state != States.TURN_ANGLE;
+  }
+
+  public CommandBase turnAngleCommand(double angle) {
+    return new FunctionalCommand(
+        () -> setTurnStart(angle),
+        () -> driveTurn(),
+        (a) -> stop(),
+        this::isTurningFinished,
+        this);
+  }
+
+  public CommandBase turnExactAngle(double angle) {
+    return new FunctionalCommand(
+        () -> setTurnAngle(angle),
+        () -> driveTurn(),
+        (a) -> stop(),
+        this::isTurningFinished,
+        this);
+  }
+
+  /*
+   * public RamseteCommand getRamseteCommand(Trajectory trajectory) {
+   * return new RamseteCommand(
+   * trajectory,
+   * this::getPose,
+   * ramseteController,
+   * new SimpleMotorFeedforward(DRIVE_TRAJ_KS, DRIVE_TRAJ_KV, DRIVE_TRAJ_KA),
+   * driveKinematics,
+   * this::getWheelSpeeds,
+   * new PIDController(0.95, 0, 0),
+   * new PIDController(0.95, 0, 0),
+   * this::outputVolts,
+   * this
+   * );
+   * }
+   */
+
+  /*
+   * // Assuming this method is part of a drivetrain subsystem that provides the
+   * // necessary methods
+   * public Command followTrajectoryCommand(PathPlannerTrajectory traj, boolean
+   * isFirstPath) {
+   * return new SequentialCommandGroup(
+   * new InstantCommand(() -> {
+   * // Reset odometry for the first path you run during auto
+   * if (isFirstPath) {
+   * this.resetOdometry(traj.getInitialPose());
+   * }
+   * }),
+   * new PPRamseteCommand(
+   * traj,
+   * this::getPose, // Pose supplier
+   * this.ramseteController,
+   * new SimpleMotorFeedforward(DRIVE_TRAJ_KS, DRIVE_TRAJ_KV, DRIVE_TRAJ_KA),
+   * this.driveKinematics, // DifferentialDriveKinematics
+   * this::getWheelSpeeds, // DifferentialDriveWheelSpeeds supplier
+   * new PIDController(0, 0, 0), // Left controller. Tune these values for your
+   * robot. Leaving them 0 will only
+   * // use feedforwards.
+   * new PIDController(0, 0, 0), // Right controller (usually the same values as
+   * left controller)
+   * this::outputVolts, // Voltage biconsumer
+   * false, // Should the path be automatically mirrored depending on alliance
+   * color.
+   * // Optional, defaults to true
+   * this // Requires this drive subsystem
+   * ));
+   * }
+   * 
+   * public Command followWithEvents(PathPlannerTrajectory path, Map<String,
+   * Command> eventMap, boolean isFirstPath) {
+   * FollowPathWithEvents command = new FollowPathWithEvents(
+   * this.followTrajectoryCommand(path, isFirstPath),
+   * path.getMarkers(),
+   * eventMap);
+   * return command;
+   * }
+   */
+
 }

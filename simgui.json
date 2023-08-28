@@ -2,6 +2,15 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/LiveWindow/Ungrouped/ADXRS450_Gyro[0]": "Gyro",
+      "/LiveWindow/Ungrouped/PIDController[1]": "PIDController",
+      "/LiveWindow/Ungrouped/PIDController[2]": "PIDController",
+      "/LiveWindow/Ungrouped/PIDController[3]": "PIDController",
+      "/LiveWindow/Ungrouped/PIDController[4]": "PIDController",
+      "/LiveWindow/Ungrouped/PWMSparkMax[0]": "Motor Controller",
+      "/LiveWindow/Ungrouped/PWMSparkMax[2]": "Motor Controller",
+      "/LiveWindow/Ungrouped/Scheduler": "Scheduler",
+      "/LiveWindow/Ungrouped/navX-Sensor[4]": "Gyro",
       "/SmartDashboard/Arm Mechanism": "Mechanism2d",
       "/SmartDashboard/Auto Choices": "String Chooser",
       "/SmartDashboard/Claw": "Subsystem",
@@ -22,6 +31,10 @@
         }
       },
       "/SmartDashboard/Field": {
+        "traj": {
+          "arrows": false,
+          "style": "Line"
+        },
         "window": {
           "visible": true
         }
@@ -45,8 +58,7 @@
         },
         "PivotArm": {
           "open": true
-        },
-        "open": true
+        }
       },
       "Shuffleboard": {
         "open": true
