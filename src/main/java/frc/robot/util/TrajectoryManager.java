@@ -46,8 +46,8 @@ public class TrajectoryManager {
      */
 
      public enum TrajectoryTypes {
-        GoToPos,
-        GoToPos2,
+        DriveForward,
+        ReverseToPose,
         Straight
 
      }
@@ -57,7 +57,10 @@ public class TrajectoryManager {
     private TrajectoryConfig config;
     private TrajectoryConfig reverseConfig;
 
-        private Drive drive;
+    private Drive drive;
+
+    private boolean flipPose = true;
+    private final double speedBoost = 2.5;
 
     public TrajectoryManager(Drive drive) {
         autoVoltageConstraint = new DifferentialDriveVoltageConstraint(
@@ -88,17 +91,28 @@ public class TrajectoryManager {
         this.drive = drive;
     }
 
-    public Trajectory exampleTrajectory() {
+    public Trajectory forwardTrajectory(Pose2d pose) {
+        if (useSpeedBoost(pose, drive.getPose())) {
+            config.setStartVelocity(Math.max(drive.getVelocityMetersPerSecond(), speedBoost));
+        } else {
+            config.setStartVelocity(drive.getVelocityMetersPerSecond());
+        }
+
         // testing only
-        config.setStartVelocity(drive.getVelocityMetersPerSecond());
         LogInterestingValues(drive.getPose(), FieldConstants.RED_CARGO_POSE[0]);
+
+        // change pose angle to make it faster
+        if (flipPose /* && !isReversed(drive.getPose(), pose) */) {
+            pose = new Pose2d(pose.getTranslation(), pose.getRotation().minus(Rotation2d.fromDegrees(180)));
+        }
+
         try {
             return TrajectoryGenerator.generateTrajectory(
                 drive.getPose(),
                 // Pass through these two interior waypoints, making an 's' curve path
                 List.of(/* new Translation2d(1, 1), new Translation2d(2, -1) */),
                 // End 3 meters straight ahead of where we started, facing forward
-                FieldConstants.RED_CHARGE_POSE[0],
+                pose,
                 config);
         } catch (Exception e) {
             System.out.println("Bad trajectory");
@@ -106,18 +120,30 @@ public class TrajectoryManager {
         }
     }
 
-    public Trajectory exampleTrajectory2() {
+    public Trajectory reverseTrajectory(Pose2d pose) {
+        if (useSpeedBoost(pose, drive.getPose())) {
+            reverseConfig.setStartVelocity(Math.min(drive.getVelocityMetersPerSecond(), -speedBoost));
+        } else {
+            reverseConfig.setStartVelocity(drive.getVelocityMetersPerSecond());
+        }
+        
         // testing only
-        config.setStartVelocity(drive.getVelocityMetersPerSecond());
         LogInterestingValues(drive.getPose(), FieldConstants.BLUE_CHARGE_POSE[1]);
+        
+        // change pose angle to make it faster
+        if (flipPose /* && !isReversed(drive.getPose(), pose) */) {
+            pose = new Pose2d(pose.getTranslation(), pose.getRotation().minus(Rotation2d.fromDegrees(180)));
+        }
+
         try {
             return TrajectoryGenerator.generateTrajectory(
                 drive.getPose(),
                 // Pass through these two interior waypoints, making an 's' curve path
                 List.of(/* new Translation2d(1, 1), new Translation2d(2, -1) */),
                 // End 3 meters straight ahead of where we started, facing forward
-                FieldConstants.BLUE_CHARGE_POSE[1],
-                config);
+                pose,
+                reverseConfig
+            );
         } catch (Exception e) {
             System.out.println("Bad trajectory");
             return null;
@@ -141,7 +167,7 @@ public class TrajectoryManager {
     }
 
     public static double angleBetween(Pose2d pose1, Pose2d pose2) {
-        return pose1.getRotation().minus(pose2.getRotation()).getDegrees();
+        return pose2.getRotation().minus(pose1.getRotation()).getDegrees();
     }
 
     public static boolean isReversed(Pose2d pose1, Pose2d pose2) {
@@ -150,6 +176,14 @@ public class TrajectoryManager {
 
     public static boolean inFrontOf(Pose2d pose1, Pose2d pose2) {
         return pose2.getTranslation().minus(pose1.getTranslation()).getX() > 0;
+    }
+
+    public static double distanceBetween(Pose2d pose1, Pose2d pose2) {
+        return pose2.getTranslation().getDistance(pose1.getTranslation());
+    }
+
+    public boolean useSpeedBoost(Pose2d pose1, Pose2d pose2) {
+        return distanceBetween(pose1, pose2) > 5;
     }
 
     public void LogInterestingValues(Pose2d init, Pose2d end) {
@@ -162,22 +196,46 @@ public class TrajectoryManager {
         return new Pose2d(pose.getTranslation(), pose.getRotation().plus(new Rotation2d(Math.PI)));
     }
 
-    public Trajectory getTrajectory(TrajectoryTypes type) {
+    public Trajectory getTrajectory(TrajectoryTypes type, Pose2d pose) {
         switch (type) {
-            case GoToPos:
-                return exampleTrajectory();
-            case GoToPos2:
-                return exampleTrajectory2();
+            case DriveForward:
+                return forwardTrajectory(pose);
+            case ReverseToPose:
+                return reverseTrajectory(pose);
             default:
-                return exampleTrajectory();
+                return forwardTrajectory(pose);
         }
     }
 
-    public CommandBase getOnTheFlyCommand(TrajectoryTypes type) {
+    public TrajectoryTypes opposite(TrajectoryTypes type) {
+        switch (type) {
+            case DriveForward:
+                return TrajectoryTypes.ReverseToPose;
+            case ReverseToPose:
+                return TrajectoryTypes.DriveForward;
+            default:
+                return TrajectoryTypes.DriveForward;
+        }
+    }
+
+    public CommandBase getOnTheFlyCommand(TrajectoryTypes type, Pose2d pose) {
         return new CommandBase() {
             @Override
             public void initialize() {
-                Trajectory trajectory = getTrajectory(type);
+                // TODO use a smarter way to get the trajectory then try everything
+                // I tried this and it worked but its not computationally fast
+                // who cares
+                Trajectory trajectory = getTrajectory(type, pose);
+                if (trajectory == null) {
+                    trajectory = getTrajectory(opposite(type), pose);
+                }
+                if (trajectory == null) {
+                    flipPose = !flipPose;
+                    trajectory = getTrajectory(type, pose);
+                    if (trajectory == null) {
+                        trajectory = getTrajectory(opposite(type), pose);
+                    }
+                }
                 drive.driveTrajectory(trajectory);
             }
             
@@ -198,26 +256,55 @@ public class TrajectoryManager {
         };
     }
 
-    public void RunOnTheFly(TrajectoryTypes type) {
-        CommandScheduler.getInstance().schedule(getOnTheFlyCommand(type));
+    public void RunOnTheFly(TrajectoryTypes type, Pose2d pose) {
+        CommandScheduler.getInstance().schedule(getOnTheFlyCommand(type, pose));
+    }
+
+    public void scheduleSmartMotionCommand(Pose2d pose) {
+        // check if angle is too great and rotation required
+        if (Math.abs(angleBetween(drive.getPose(), pose)) > 90) {
+            // CommandScheduler.getInstance().schedule(turnIfNecessary(pose));
+            System.out.println("Turning");
+        }
+
+        // check if its easier to reverse or go forward
+        CommandBase driveCommand;
+        if (isReversed(drive.getPose(), pose)) {
+            driveCommand = getOnTheFlyCommand(TrajectoryTypes.DriveForward, pose);
+        } else {
+            driveCommand = getOnTheFlyCommand(TrajectoryTypes.ReverseToPose, pose);
+        }
+
+        // Turn to proper pose
+        CommandBase turnCommand = drive.turnExactAngle(pose.getRotation().getDegrees());
+
+        CommandScheduler.getInstance().schedule(new SequentialCommandGroup(driveCommand, turnCommand));
     }
 
     public CommandBase turnIfNecessary(Pose2d pose) {
         // check if need to rotate
 
-        return drive.turnAngleCommand(angleBetween(pose, drive.getPose()) + 180);
+        return drive.turnAngleCommand(angleBetween(drive.getPose(), pose) + 180);
     }
 
     public CommandBase goToPos(Pose2d pose) {
         // check if need to rotate
         return new SequentialCommandGroup(
             turnIfNecessary(pose),
-            getOnTheFlyCommand(TrajectoryTypes.GoToPos),
+            getOnTheFlyCommand(TrajectoryTypes.DriveForward, pose),
             drive.turnExactAngle(pose.getRotation().getDegrees())
         );
     }
 
-    public void scheduleGoToPos(Pose2d pose) {
+    public CommandBase goToPosBackwards(Pose2d pose) {
+        // check if need to rotate
+        return new SequentialCommandGroup(
+            getOnTheFlyCommand(TrajectoryTypes.ReverseToPose, pose),
+            drive.turnExactAngle(pose.getRotation().getDegrees())
+        );
+    }
+
+    public void scheduleDriveForward(Pose2d pose) {
         CommandScheduler.getInstance().schedule(goToPos(pose));
     }
 }

@@ -1,18 +1,24 @@
 package frc.robot.util;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
 public class TunableNumber {
     private String key;
     private double defaultValue;
     private double value;
 
+    private LoggedDashboardNumber loggedDashboardNumber;
+
     public TunableNumber(String key, double defaultValue) {
         this.key = key;
         this.defaultValue = defaultValue;
         this.value = defaultValue;
 
-        SmartDashboard.putNumber(key, defaultValue);
+        loggedDashboardNumber = new LoggedDashboardNumber(key, defaultValue);
+    }
+
+    public TunableNumber(String key) {
+        this(key, 0.0);
     }
 
     public TunableNumber(String subsystem, String key, double defaultValue) {
@@ -20,28 +26,17 @@ public class TunableNumber {
         this.defaultValue = defaultValue;
         this.value = defaultValue;
 
-        SmartDashboard.putNumber(this.key, defaultValue);
-    }
-
-    public TunableNumber(String key, double defaultValue, boolean t) {
-        this.key = key;
-        this.defaultValue = defaultValue;
-        this.value = defaultValue;
-
-        if (SmartDashboard.getNumber(key, -1000) == -1000) {
-            // not set
-            SmartDashboard.putNumber(key, defaultValue);
-        }
-
+        loggedDashboardNumber = new LoggedDashboardNumber(this.key, defaultValue);
     }
 
     public double get() {
-        return SmartDashboard.getNumber(key, defaultValue);
+        return loggedDashboardNumber.get();
     }
 
     public void set(double value) {
         this.value = value;
-        SmartDashboard.putNumber(key, value);
+        
+        loggedDashboardNumber.set(value);;
     }
 
     public void reset() {

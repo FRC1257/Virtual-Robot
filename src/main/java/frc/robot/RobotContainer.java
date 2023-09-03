@@ -10,7 +10,6 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import frc.robot.commands.GenerateOnTheFly;
 import frc.robot.commands.SpinAuto;
 import frc.robot.commands.ToPose;
 import frc.robot.subsystems.claw.Claw;
@@ -35,7 +34,9 @@ import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants;
 import frc.robot.util.CommandSnailController;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.Gyro;
+import frc.robot.util.RobotStateManager;
 import frc.robot.util.TrajectoryManager;
+import frc.robot.util.TrajectoryManager.TrajectoryTypes;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -45,6 +46,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -80,6 +82,8 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
   private final LoggedDashboardNumber flywheelSpeedInput = new LoggedDashboardNumber("Flywheel Speed", 1500.0);
+
+  private RobotStateManager robotState;
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -117,6 +121,9 @@ public class RobotContainer {
         break;
     }
 
+    // Set up robot state manager
+    robotState = RobotStateManager.getInstance();
+
     MechanismRoot2d root = mech.getRoot("elevator", 1, 0.5);
     elevator.setMechanism(root.append(elevator.getElevatorMechanism()));
     pivotArm.setMechanism(elevator.append(pivotArm.getArmMechanism()));
@@ -140,7 +147,7 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Clear old buttons
-    // CommandScheduler.getInstance().getActiveButtonLoop().clear();
+    CommandScheduler.getInstance().getActiveButtonLoop().clear();
     drive.setDefaultCommand(
         new RunCommand(() -> drive.driveArcade(driver.getDriveForward(), driver.getDriveTurn()), drive));
     elevator.setDefaultCommand(
@@ -159,12 +166,23 @@ public class RobotContainer {
     operator.leftBumper().onTrue(claw.grab());
     operator.rightBumper().onTrue(claw.release());
 
-    driver.rightBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos, manager));
-    driver.leftBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos2, manager));
+    // driver.rightBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos, manager));
+    driver.leftBumper().onTrue(new InstantCommand(() -> manager.scheduleSmartMotionCommand(FieldConstants.RED_CHARGE_POSE[0])));
     // cancel trajectory
     driver.getY().onTrue(drive.endTrajectoryCommand());
     // driver.start().onTrue(drive.turnAngleCommand(45));
-    driver.start().onTrue(new InstantCommand(() -> manager.scheduleGoToPos(FieldConstants.BLUE_CHARGE_POSE[0])));
+    driver.rightBumper().onTrue(new InstantCommand(() -> manager.scheduleSmartMotionCommand(FieldConstants.BLUE_CHARGE_POSE[0])));
+  }
+
+  public void driverAssistCommands() {
+    CommandScheduler.getInstance().getActiveButtonLoop().clear();
+
+    // driver.leftBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos, manager));
+    // driver.rightBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos2, manager));
+    // cancel trajectory
+    driver.getY().onTrue(drive.endTrajectoryCommand());
+    // driver.start().onTrue(drive.turnAngleCommand(45));
+    new Trigger(() -> robotState.checkTravelToPickup()).onTrue(new InstantCommand(() -> manager.scheduleDriveForward(FieldConstants.BLUE_CHARGE_POSE[0])));
   }
 
   public CommandBase scoreHigh() {
