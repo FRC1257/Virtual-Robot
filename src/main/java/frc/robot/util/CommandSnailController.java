@@ -50,6 +50,35 @@ public class CommandSnailController extends CommandXboxController {
         return b();
     }
 
+    public enum DPad {
+        UP,
+        RIGHT,
+        DOWN,
+        LEFT
+    }
+
+    public Trigger getDPad(DPad dpad) {
+        int angle;
+        switch(dpad) {
+            case UP:
+                angle = 0;
+                break;
+            case RIGHT:
+                angle = 90;
+                break;
+            case DOWN:
+                angle = 180;
+                break;
+            case LEFT:
+                angle = 270;
+                break;
+            default:
+                angle = 0;
+        }
+
+        return new Trigger(() -> (this.getHID().getPOV() == angle));
+    }
+
     //these two commands work together to get input from the joystick to control the robot
     //since getLeftBumper is true for driveforward and driveturn, it'll make it so tha tthe
     //left y joystick controls the full movement

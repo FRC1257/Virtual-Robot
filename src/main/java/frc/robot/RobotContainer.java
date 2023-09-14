@@ -8,6 +8,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.commands.SpinAuto;
@@ -85,6 +86,8 @@ public class RobotContainer {
 
   private RobotStateManager robotState;
 
+  private boolean isBlue = true;
+
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
@@ -129,11 +132,14 @@ public class RobotContainer {
     pivotArm.setMechanism(elevator.append(pivotArm.getArmMechanism()));
     SmartDashboard.putData("Arm Mechanism", mech);
 
+    isBlue = DriverStation.getAlliance() == DriverStation.Alliance.Blue;
+
     // Set up auto routines
     autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
     autoChooser.addOption("Spin", new SpinAuto(drive));
 
     manager = new TrajectoryManager(drive);
+    manager.setColor(isBlue);
 
     // Configure the button bindings
     configureButtonBindings();
@@ -167,11 +173,16 @@ public class RobotContainer {
     operator.rightBumper().onTrue(claw.release());
 
     // driver.rightBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos, manager));
-    driver.leftBumper().onTrue(new InstantCommand(() -> manager.scheduleSmartMotionCommand(FieldConstants.RED_CHARGE_POSE[0])));
+    driver.leftBumper().onTrue(new InstantCommand(() -> robotState.scheduleMovement(manager)));
+    driver.getDPad(CommandSnailController.DPad.LEFT).onTrue(new InstantCommand(() -> robotState.toggleInputs(0)));
+    driver.getDPad(CommandSnailController.DPad.UP).onTrue(new InstantCommand(() -> robotState.toggleInputs(1)));
+    driver.getDPad(CommandSnailController.DPad.RIGHT).onTrue(new InstantCommand(() -> robotState.toggleInputs(2)));
+    driver.getDPad(CommandSnailController.DPad.DOWN).onTrue(drive.endTrajectoryCommand().andThen(robotState.getMovement(manager))); // restarts the trajectory
+
     // cancel trajectory
     driver.getY().onTrue(drive.endTrajectoryCommand());
     // driver.start().onTrue(drive.turnAngleCommand(45));
-    driver.rightBumper().onTrue(new InstantCommand(() -> manager.scheduleSmartMotionCommand(FieldConstants.BLUE_CHARGE_POSE[0])));
+    // driver.rightBumper().onTrue(new InstantCommand(() -> manager.scheduleSmartMotionCommand(FieldConstants.BLUE_CHARGE_POSE[0])));
   }
 
   public void driverAssistCommands() {
@@ -182,7 +193,7 @@ public class RobotContainer {
     // cancel trajectory
     driver.getY().onTrue(drive.endTrajectoryCommand());
     // driver.start().onTrue(drive.turnAngleCommand(45));
-    new Trigger(() -> robotState.checkTravelToPickup()).onTrue(new InstantCommand(() -> manager.scheduleDriveForward(FieldConstants.BLUE_CHARGE_POSE[0])));
+    // new Trigger(() -> robotState.checkTravelToPickup()).onTrue(new InstantCommand(() -> manager.scheduleDriveForward(FieldConstants.BLUE_CHARGE_POSE[0])));
   }
 
   public CommandBase scoreHigh() {
