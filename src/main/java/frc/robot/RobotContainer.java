@@ -37,6 +37,10 @@ import frc.robot.subsystems.pivotArm.PivotArm;
 import frc.robot.subsystems.pivotArm.PivotArmIO;
 import frc.robot.subsystems.pivotArm.PivotArmIOSim;
 import frc.robot.subsystems.pivotArm.PivotArmIOSparkMax;
+import frc.robot.subsystems.pivotWrist.PivotWrist;
+import frc.robot.subsystems.pivotWrist.PivotWristIO;
+import frc.robot.subsystems.pivotWrist.PivotWristIOSim;
+import frc.robot.subsystems.pivotWrist.PivotWristIOSparkMax;
 
 import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants;
 
@@ -78,6 +82,7 @@ public class RobotContainer {
   private final Claw claw;
   private final Laterator laterator;
   private final IntakeArm intakeArm;
+  private final PivotWrist pivotWrist;
   private final Gyro gyro = Gyro.getInstance();
 
   private final TrajectoryManager manager;
@@ -111,6 +116,7 @@ public class RobotContainer {
         claw = new Claw(new ClawIOSparkMax());
         laterator = new Laterator(new LateratorIOSparkMax());
         intakeArm = new IntakeArm(new IntakeArmIOSparkMax());
+        pivotWrist = new PivotWrist(new PivotWristIOSparkMax());
         // drive = new Drive(new DriveIOFalcon500());
         // flywheel = new Flywheel(new FlywheelIOFalcon500());
         break;
@@ -123,6 +129,7 @@ public class RobotContainer {
         claw = new Claw(new ClawIOSim());
         laterator = new Laterator(new LateratorIOSim());
         intakeArm = new IntakeArm(new IntakeArmIOSim());
+        pivotWrist = new PivotWrist(new PivotWristIOSim());
         break;
 
       // Replayed robot, disable IO implementations
@@ -139,6 +146,8 @@ public class RobotContainer {
         });
         intakeArm = new IntakeArm(new IntakeArmIO() {
         });
+        pivotWrist = new PivotWrist(new PivotWristIO() {
+        });
         break;
     }
 
@@ -149,6 +158,7 @@ public class RobotContainer {
     elevator.setMechanism(root.append(elevator.getElevatorMechanism()));
     laterator.setMechanism(elevator.append(laterator.getLateratorMechanism()));
     pivotArm.setMechanism(laterator.append(pivotArm.getArmMechanism()));
+    pivotWrist.setMechanism(pivotArm.append(pivotWrist.getWristMechanism()));
     SmartDashboard.putData("Arm Mechanism", mech);
 
     MechanismRoot2d root2 = mech.getRoot("Intake", 1, 0.5);

@@ -27,7 +27,7 @@ public class IntakeArmIOSparkMax implements IntakeArmIO {
     private double setpoint = 0;
 
     public IntakeArmIOSparkMax() {
-        intakeArmMotor = new CANSparkMax(ELEVATOR_MOTOR_ID, MotorType.kBrushless);
+        intakeArmMotor = new CANSparkMax(INTAKE_ARM_MOTOR_ID, MotorType.kBrushless);
         intakeArmMotor.restoreFactoryDefaults();
         intakeArmMotor.setIdleMode(IdleMode.kBrake);
         intakeArmMotor.setSmartCurrentLimit(NEO_CURRENT_LIMIT);

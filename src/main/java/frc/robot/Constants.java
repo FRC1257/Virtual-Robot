@@ -184,6 +184,54 @@ public final class Constants {
     }
   }
 
+  public static class PivotWrist {
+    // PID constants
+    public static double[] PIVOT_WRIST_PID = new double[] { 0.25, 0, 0, 0 };
+    public static double PIVOT_WRIST_PID_TOLERANCE = 1;
+    public static double PIVOT_WRIST_PID_MAX_OUTPUT = 1;
+
+    public static double POSITION_CONVERSION_FACTOR = 1;
+
+    // Setpoints between -1 and 1
+    public static double PIVOT_WRIST_SETPOINT_UP = 135;
+    public static double PIVOT_WRIST_SETPOINT_MID = 175;
+    // public static double PIVOT_WRIST_SETPOINT_INTAKE = 0; // also used for low
+    // score
+    public static double PIVOT_WRIST_SETPOINT_HOLD = 10;
+    public static final double PIVOT_WRIST_SETPOINT_BOTTOM = 0;
+    public static final double PIVOT_WRIST_SETPOINT_TOP = 170;
+
+    public static class PivotWristPhysicalConstants {
+      public static final double PIVOT_WRIST_TOLERANCE = 3;
+      public static final double PIVOT_WRIST_STOP_BUFFER = 5;
+    }
+
+    public static class PivotWristSimConstants {
+      public static final int kMotorPort = 2;
+      public static final int kEncoderAChannel = 2;
+      public static final int kEncoderBChannel = 3;
+      public static final int kJoystickPort = 0;
+
+      public static final String kWristPositionKey = "WristPosition";
+      public static final String kWristPKey = "WristP";
+
+      // The P gain for the PID controller that drives this arm.
+      public static final double kDefaultWristKp = 50.0;
+      public static final double kDefaultWristSetpointDegrees = 75.0;
+
+      // distance per pulse = (angle per revolution) / (pulses per revolution)
+      // = (2 * PI rads) / (4096 pulses)
+      public static final double kWristEncoderDistPerPulse = 2.0 * Math.PI / 4096;
+
+      public static final double kWristReduction = 200;
+      public static final double kWristMass = 5.0; // Kilograms
+      public static final double kWristLength = Units.inchesToMeters(20);
+      public static final double kMinAngleRads = Units.degreesToRadians(-175);
+      public static final double kMaxAngleRads = Units.degreesToRadians(255);
+      public static double kEncoderDistancePerPulse;
+    }
+  }
+
   public static class IntakeArm {
     // PID constants
     public static double[] INTAKE_ARM_PID = new double[] { 0.25, 0, 0, 0 };
@@ -342,9 +390,10 @@ public final class Constants {
 
     // Intakes
     public final static int INTAKE_MOTOR_ID = 9;
+    public final static int INTAKE_ARM_MOTOR_ID = 6;
 
-    public static final int INTAKE_ARM_MOTOR_LEFT_ID = 6;
-    public static final int INTAKE_ARM_MOTOR_RIGHT_ID = 8;
+    /* public static final int INTAKE_ARM_MOTOR_LEFT_ID = 6;
+    public static final int INTAKE_ARM_MOTOR_RIGHT_ID = 8; */
 
     // Claw
     public final static int CLAW_MOTOR_LEFT_ID = 10;
@@ -356,6 +405,7 @@ public final class Constants {
 
     // Pivot ARm
     public static int PIVOT_ARM_ID = 7;
+    public static int PIVOT_WRIST_ID = 12;
 
     // Sensors
     public static final int INTAKE_BUMP_SWITCH_ID = 24;

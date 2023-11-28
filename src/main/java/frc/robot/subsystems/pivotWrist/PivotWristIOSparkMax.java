@@ -1,4 +1,4 @@
-package frc.robot.subsystems.pivotArm;
+package frc.robot.subsystems.pivotWrist;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -13,31 +13,31 @@ import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 
 import static frc.robot.Constants.ElectricalLayout.*;
-import static frc.robot.Constants.PivotArm;
+import static frc.robot.Constants.PivotWrist;
 import static frc.robot.Constants.NEO_CURRENT_LIMIT;
-import static frc.robot.Constants.PivotArm.PivotArmPhysicalConstants.*;
+import static frc.robot.Constants.PivotWrist.PivotWristPhysicalConstants.*;
 
-public class PivotArmIOSparkMax implements PivotArmIO {
+public class PivotWristIOSparkMax implements PivotWristIO {
     // Motor and Encoders
-    private CANSparkMax pivotMotor;
+    private CANSparkMax pivotWristMotor;
     private SparkMaxPIDController pidController;
     private RelativeEncoder encoder;
     private DutyCycleEncoder absoluteEncoder;
 
     private double setpoint = 0;
 
-    public PivotArmIOSparkMax() {
-        pivotMotor = new CANSparkMax(PIVOT_ARM_ID, MotorType.kBrushless);
-        pivotMotor.restoreFactoryDefaults();
-        pivotMotor.setIdleMode(IdleMode.kBrake);
-        pivotMotor.setSmartCurrentLimit(NEO_CURRENT_LIMIT);
+    public PivotWristIOSparkMax() {
+        pivotWristMotor = new CANSparkMax(PIVOT_WRIST_ID, MotorType.kBrushless);
+        pivotWristMotor.restoreFactoryDefaults();
+        pivotWristMotor.setIdleMode(IdleMode.kBrake);
+        pivotWristMotor.setSmartCurrentLimit(NEO_CURRENT_LIMIT);
 
-        pidController = pivotMotor.getPIDController();
+        pidController = pivotWristMotor.getPIDController();
         pidController.setOutputRange(-1, 1);
 
-        encoder = pivotMotor.getEncoder();
-        encoder.setPositionConversionFactor(PivotArm.POSITION_CONVERSION_FACTOR);
-        encoder.setVelocityConversionFactor(PivotArm.POSITION_CONVERSION_FACTOR / 60);
+        encoder = pivotWristMotor.getEncoder();
+        encoder.setPositionConversionFactor(PivotWrist.POSITION_CONVERSION_FACTOR);
+        encoder.setVelocityConversionFactor(PivotWrist.POSITION_CONVERSION_FACTOR / 60);
         encoder.setPosition(0.6);
 
         absoluteEncoder = new DutyCycleEncoder(0);
@@ -57,18 +57,18 @@ public class PivotArmIOSparkMax implements PivotArmIO {
 
     /** Updates the set of loggable inputs. */
     @Override
-    public void updateInputs(PivotArmIOInputs inputs) {
+    public void updateInputs(PivotWristIOInputs inputs) {
         inputs.angle = encoder.getPosition();
         inputs.angleRadsPerSec = encoder.getVelocity();
-        inputs.appliedVolts = pivotMotor.getAppliedOutput() * pivotMotor.getBusVoltage();
-        inputs.currentAmps = new double[] {pivotMotor.getOutputCurrent()};
-        inputs.tempCelsius = new double[] {pivotMotor.getMotorTemperature()};
+        inputs.appliedVolts = pivotWristMotor.getAppliedOutput() * pivotWristMotor.getBusVoltage();
+        inputs.currentAmps = new double[] {pivotWristMotor.getOutputCurrent()};
+        inputs.tempCelsius = new double[] {pivotWristMotor.getMotorTemperature()};
     }
 
     /** Run open loop at the specified voltage. */
     @Override
     public void setVoltage(double motorVolts) {
-        pivotMotor.setVoltage(motorVolts);
+        pivotWristMotor.setVoltage(motorVolts);
     }
 
     /** Returns the current distance measurement. */
@@ -86,12 +86,12 @@ public class PivotArmIOSparkMax implements PivotArmIO {
 
     @Override
     public void setBrake(boolean brake) {
-        pivotMotor.setIdleMode(brake ? IdleMode.kBrake : IdleMode.kCoast);
+        pivotWristMotor.setIdleMode(brake ? IdleMode.kBrake : IdleMode.kCoast);
     }
 
     @Override
     public boolean atSetpoint() {
-        return Math.abs(encoder.getPosition() - setpoint) < PivotArm.PIVOT_ARM_PID_TOLERANCE;
+        return Math.abs(encoder.getPosition() - setpoint) < PivotWrist.PIVOT_WRIST_PID_TOLERANCE;
     }
 
     @Override
