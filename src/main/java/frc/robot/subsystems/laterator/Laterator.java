@@ -1,4 +1,4 @@
-package frc.robot.subsystems.elevator;
+package frc.robot.subsystems.laterator;
 
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
@@ -15,39 +15,39 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
 
-import static frc.robot.Constants.Elevator.*;
-import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants.ELEVATOR_PID;
+import static frc.robot.Constants.Laterator.*;
+import static frc.robot.Constants.Laterator.LateratorPhysicalConstants.LATERATOR_PID;
 
-public class Elevator extends SubsystemBase {
-    private final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
+public class Laterator extends SubsystemBase {
+    private final LateratorIOInputsAutoLogged inputs = new LateratorIOInputsAutoLogged();
 
-    private LoggedDashboardNumber p = new LoggedDashboardNumber("Elevator/P", ELEVATOR_PID[0]);
-    private LoggedDashboardNumber i = new LoggedDashboardNumber("Elevator/I", ELEVATOR_PID[1]);
-    private LoggedDashboardNumber d = new LoggedDashboardNumber("Elevator/D", ELEVATOR_PID[2]);
-    private LoggedDashboardNumber ff = new LoggedDashboardNumber("Elevator/FF", ELEVATOR_PID[3]);
+    private LoggedDashboardNumber p = new LoggedDashboardNumber("Laterator/P", LATERATOR_PID[0]);
+    private LoggedDashboardNumber i = new LoggedDashboardNumber("Laterator/I", LATERATOR_PID[1]);
+    private LoggedDashboardNumber d = new LoggedDashboardNumber("Laterator/D", LATERATOR_PID[2]);
+    private LoggedDashboardNumber ff = new LoggedDashboardNumber("Laterator/FF", LATERATOR_PID[3]);
 
     private double setpoint = 0;
 
-    private final ElevatorIO io;
+    private final LateratorIO io;
 
-    // Create a Mechanism2d visualization of the elevator
-    private MechanismLigament2d ElevatorMechanism;
+    // Create a Mechanism2d visualization of the Laterator
+    private MechanismLigament2d LateratorMechanism;
 
-    public Elevator(ElevatorIO io) {
+    public Laterator(LateratorIO io) {
         this.io = io;
         SmartDashboard.putData(getName(), this);
     }
 
     public double highSetpoint() {
-        return io.ELEVATOR_MAX_HEIGHT;
+        return io.LATERATOR_MAX_HEIGHT;
     }
 
     @Override
     public void periodic() {
         io.updateInputs(inputs);
-        Logger.getInstance().processInputs("Elevator", inputs);
+        Logger.getInstance().processInputs("Laterator", inputs);
 
-        ElevatorMechanism.setLength(io.getDistance());
+        LateratorMechanism.setLength(io.getDistance());
 
         // Update the PID constants if they have changed
         if (p.get() != io.getP()) 
@@ -63,14 +63,14 @@ public class Elevator extends SubsystemBase {
             io.setFF(ff.get());
         
         // Log Inputs
-        Logger.getInstance().processInputs("Elevator", inputs);
+        Logger.getInstance().processInputs("Laterator", inputs);
     }
 
     public void setVoltage(double motorVolts) {
-        // limit the elevator if its past its limit
-        if (io.getDistance() > io.ELEVATOR_MAX_HEIGHT && motorVolts > 0) {
+        // limit the Laterator if its past its limit
+        if (io.getDistance() > io.LATERATOR_MAX_HEIGHT && motorVolts > 0) {
             motorVolts = 0;
-        } else if (io.getDistance() < io.ELEVATOR_MIN_HEIGHT && motorVolts < 0) {
+        } else if (io.getDistance() < io.LATERATOR_MIN_HEIGHT && motorVolts < 0) {
             motorVolts = 0;
         }
 
@@ -90,19 +90,19 @@ public class Elevator extends SubsystemBase {
     }
 
     public boolean atSetpoint() {
-        return Math.abs(io.getDistance() - setpoint) < ELEVATOR_TOLERANCE;
+        return Math.abs(io.getDistance() - setpoint) < LATERATOR_TOLERANCE;
     }
 
     public void setMechanism(MechanismLigament2d mechanism) {
-        ElevatorMechanism = mechanism;
+        LateratorMechanism = mechanism;
     }
 
     public MechanismLigament2d append(MechanismLigament2d mechanism) {
-        return ElevatorMechanism.append(mechanism);
+        return LateratorMechanism.append(mechanism);
     }
 
-    public MechanismLigament2d getElevatorMechanism() {
-        return new MechanismLigament2d("Elevator", 5, 36, 5, new Color8Bit(Color.kOrange));
+    public MechanismLigament2d getLateratorMechanism() {
+        return new MechanismLigament2d("Laterator", 5, 0, 5, new Color8Bit(Color.kOrange));
     }
 
     public Command PIDCommand(double setpoint) {

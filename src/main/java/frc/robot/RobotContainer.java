@@ -25,6 +25,14 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOSparkMax;
+import frc.robot.subsystems.intakeArm.IntakeArm;
+import frc.robot.subsystems.intakeArm.IntakeArmIO;
+import frc.robot.subsystems.intakeArm.IntakeArmIOSim;
+import frc.robot.subsystems.intakeArm.IntakeArmIOSparkMax;
+import frc.robot.subsystems.laterator.Laterator;
+import frc.robot.subsystems.laterator.LateratorIOSparkMax;
+import frc.robot.subsystems.laterator.LateratorIOSim;
+import frc.robot.subsystems.laterator.LateratorIO;
 import frc.robot.subsystems.pivotArm.PivotArm;
 import frc.robot.subsystems.pivotArm.PivotArmIO;
 import frc.robot.subsystems.pivotArm.PivotArmIOSim;
@@ -68,6 +76,8 @@ public class RobotContainer {
   private final Elevator elevator;
   private final PivotArm pivotArm;
   private final Claw claw;
+  private final Laterator laterator;
+  private final IntakeArm intakeArm;
   private final Gyro gyro = Gyro.getInstance();
 
   private final TrajectoryManager manager;
@@ -99,6 +109,8 @@ public class RobotContainer {
         elevator = new Elevator(new ElevatorIOSparkMax());
         pivotArm = new PivotArm(new PivotArmIOSparkMax());
         claw = new Claw(new ClawIOSparkMax());
+        laterator = new Laterator(new LateratorIOSparkMax());
+        intakeArm = new IntakeArm(new IntakeArmIOSparkMax());
         // drive = new Drive(new DriveIOFalcon500());
         // flywheel = new Flywheel(new FlywheelIOFalcon500());
         break;
@@ -109,6 +121,8 @@ public class RobotContainer {
         elevator = new Elevator(new ElevatorIOSim());
         pivotArm = new PivotArm(new PivotArmIOSim());
         claw = new Claw(new ClawIOSim());
+        laterator = new Laterator(new LateratorIOSim());
+        intakeArm = new IntakeArm(new IntakeArmIOSim());
         break;
 
       // Replayed robot, disable IO implementations
@@ -121,6 +135,10 @@ public class RobotContainer {
         });
         claw = new Claw(new ClawIO() {
         });
+        laterator = new Laterator(new LateratorIO() {
+        });
+        intakeArm = new IntakeArm(new IntakeArmIO() {
+        });
         break;
     }
 
@@ -129,8 +147,13 @@ public class RobotContainer {
 
     MechanismRoot2d root = mech.getRoot("elevator", 1, 0.5);
     elevator.setMechanism(root.append(elevator.getElevatorMechanism()));
-    pivotArm.setMechanism(elevator.append(pivotArm.getArmMechanism()));
+    laterator.setMechanism(elevator.append(laterator.getLateratorMechanism()));
+    pivotArm.setMechanism(laterator.append(pivotArm.getArmMechanism()));
     SmartDashboard.putData("Arm Mechanism", mech);
+
+    MechanismRoot2d root2 = mech.getRoot("Intake", 1, 0.5);
+    intakeArm.setMechanism(root2.append(intakeArm.getArmMechanism()));
+    SmartDashboard.putData("Intake Mechanism", mech);
 
     isBlue = DriverStation.getAlliance() == DriverStation.Alliance.Blue;
 
@@ -178,6 +201,8 @@ public class RobotContainer {
     driver.getDPad(CommandSnailController.DPad.UP).onTrue(new InstantCommand(() -> robotState.toggleInputs(1)));
     driver.getDPad(CommandSnailController.DPad.RIGHT).onTrue(new InstantCommand(() -> robotState.toggleInputs(2)));
     driver.getDPad(CommandSnailController.DPad.DOWN).onTrue(drive.endTrajectoryCommand().andThen(robotState.getMovement(manager))); // restarts the trajectory
+
+    // set something for the laterator and intake later
 
     // cancel trajectory
     driver.getY().onTrue(drive.endTrajectoryCommand());

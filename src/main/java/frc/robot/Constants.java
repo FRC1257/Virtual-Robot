@@ -83,6 +83,59 @@ public final class Constants {
 
   }
 
+  public static class Laterator {
+    public static class LateratorSimConstants {
+      public static final int kMotorPort = 0;
+      public static final int kEncoderAChannel = 0;
+      public static final int kEncoderBChannel = 1;
+      public static final int kJoystickPort = 0;
+
+      public static final double kLateratorKp = 5;
+      public static final double kLateratorKi = 0;
+      public static final double kLateratorKd = 0;
+
+      public static final double kLateratorS = 0.0; // volts (V)
+      public static final double kLateratorG = 0.762; // volts (V)
+      public static final double kLateratorV = 0.762; // volt per velocity (V/(m/s))
+      public static final double kLateratorA = 0.0; // volt per acceleration (V/(m/s²))
+
+      public static final double kLateratorGearing = 10.0;
+      public static final double kLateratorDrumRadius = Units.inchesToMeters(2.0);
+      public static final double kCarriageMass = 4.0; // kg
+
+      public static final double kSetpointMeters = 0.75;
+      // Encoder is reset to measure 0 at the bottom, so minimum height is 0.
+      public static final double kMinLateratorHeightMeters = 0.0;
+      public static final double kMaxLateratorHeightMeters = 2.25;
+
+      // distance per pulse = (distance per revolution) / (pulses per revolution)
+      // = (Pi * D) / ppr
+      public static final double kLateratorEncoderDistPerPulse = 2.0 * Math.PI * kLateratorDrumRadius / 4096;
+    }
+
+    public static class LateratorPhysicalConstants {
+
+      public static final double[] LATERATOR_PID = new double[] { 0.1, 0, 0, 0 };
+
+      // TODO Tune
+      public static double LATERATOR_PID_MAX_OUTPUT = 0.7;
+      public static double LATERATOR_REV_TO_POS_FACTOR = 1;
+
+      public static double LATERATOR_PID_TOLERANCE = 3;
+
+      // TODO Tune
+      public static final double LATERATOR_SETPOINT_RETRACT = 0;
+      public static final double LATERATOR_SETPOINT_EXTEND = 32;
+
+      public static final double LATERATOR_SETPOINT_MIDDLE = (LATERATOR_SETPOINT_RETRACT + LATERATOR_SETPOINT_EXTEND) / 2;
+
+      public static final double LATERATOR_STOP_BUFFER = 5;
+    }
+
+    public static final double LATERATOR_TOLERANCE = 3;
+
+  }
+
   public static class PivotArm {
     // PID constants
     public static double[] PIVOT_ARM_PID = new double[] { 0.25, 0, 0, 0 };
@@ -130,6 +183,54 @@ public final class Constants {
       public static double kEncoderDistancePerPulse;
     }
   }
+
+  public static class IntakeArm {
+    // PID constants
+    public static double[] INTAKE_ARM_PID = new double[] { 0.25, 0, 0, 0 };
+    public static double INTAKE_ARM_PID_TOLERANCE = 1;
+    public static double INTAKE_ARM_PID_MAX_OUTPUT = 1;
+
+    public static double POSITION_CONVERSION_FACTOR = 1;
+
+    // Setpoints between -1 and 1
+    public static double INTAKE_ARM_SETPOINT_UP = 135;
+    public static double INTAKE_ARM_SETPOINT_MID = 175;
+    // public static double INTAKE_ARM_SETPOINT_INTAKE = 0; // also used for low
+    // score
+    public static double INTAKE_ARM_SETPOINT_HOLD = 10;
+    public static final double INTAKE_ARM_SETPOINT_BOTTOM = 0;
+    public static final double INTAKE_ARM_SETPOINT_TOP = 170;
+
+    public static class IntakeArmPhysicalConstants {
+      public static final double INTAKE_ARM_TOLERANCE = 3;
+      public static final double INTAKE_ARM_STOP_BUFFER = 5;
+    }
+
+    public static class IntakeArmSimConstants {
+      public static final int kMotorPort = 2;
+      public static final int kEncoderAChannel = 2;
+      public static final int kEncoderBChannel = 3;
+      public static final int kJoystickPort = 0;
+
+      public static final String kArmPositionKey = "ArmPosition";
+      public static final String kArmPKey = "ArmP";
+
+      // The P gain for the PID controller that drives this arm.
+      public static final double kDefaultArmKp = 50.0;
+      public static final double kDefaultArmSetpointDegrees = 75.0;
+
+      // distance per pulse = (angle per revolution) / (pulses per revolution)
+      // = (2 * PI rads) / (4096 pulses)
+      public static final double kArmEncoderDistPerPulse = 2.0 * Math.PI / 4096;
+
+      public static final double kArmReduction = 200;
+      public static final double kArmMass = 5.0; // Kilograms
+      public static final double kArmLength = Units.inchesToMeters(20);
+      public static final double kMinAngleRads = Units.degreesToRadians(-175);
+      public static final double kMaxAngleRads = Units.degreesToRadians(255);
+      public static double kEncoderDistancePerPulse;
+    }
+  }  
 
   public static class Claw {
     /* public static double[] CLAW_PID = new double[] {0, 0, 0, 0};
@@ -251,6 +352,7 @@ public final class Constants {
 
     // New Elevator Motor Design
     public final static int ELEVATOR_MOTOR_ID = 5;
+    public static final int LATERATOR_MOTOR_ID = 11;
 
     // Pivot ARm
     public static int PIVOT_ARM_ID = 7;
