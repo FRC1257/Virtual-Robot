@@ -301,6 +301,15 @@ public final class Constants {
     }
 };
 
+public static class Intake {
+  public static class IntakeSimConstants {
+    public static final int kMotorPort = 3;
+    public static final int[] kEncoderPorts = new int[] { 6, 7 };
+  }
+
+  public static double POSITION_CONVERSION_FACTOR = 0.5;
+}
+
   public static class Drivetrain {
     // drivetrain constants
     public static double DRIVE_TRACK_WIDTH_M = 0.86;// 0.66; // m

@@ -25,6 +25,10 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOSparkMax;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.intakeArm.IntakeArm;
 import frc.robot.subsystems.intakeArm.IntakeArmIO;
 import frc.robot.subsystems.intakeArm.IntakeArmIOSim;
@@ -83,6 +87,7 @@ public class RobotContainer {
   private final Laterator laterator;
   private final IntakeArm intakeArm;
   private final PivotWrist pivotWrist;
+  private final Intake intake;
   private final Gyro gyro = Gyro.getInstance();
 
   private final TrajectoryManager manager;
@@ -117,6 +122,7 @@ public class RobotContainer {
         laterator = new Laterator(new LateratorIOSparkMax());
         intakeArm = new IntakeArm(new IntakeArmIOSparkMax());
         pivotWrist = new PivotWrist(new PivotWristIOSparkMax());
+        intake = new Intake(new IntakeIOSparkMax());
         // drive = new Drive(new DriveIOFalcon500());
         // flywheel = new Flywheel(new FlywheelIOFalcon500());
         break;
@@ -130,6 +136,7 @@ public class RobotContainer {
         laterator = new Laterator(new LateratorIOSim());
         intakeArm = new IntakeArm(new IntakeArmIOSim());
         pivotWrist = new PivotWrist(new PivotWristIOSim());
+        intake = new Intake(new IntakeIOSim());
         break;
 
       // Replayed robot, disable IO implementations
@@ -148,6 +155,8 @@ public class RobotContainer {
         });
         pivotWrist = new PivotWrist(new PivotWristIO() {
         });
+        intake = new Intake(new IntakeIO() {
+        });
         break;
     }
 
@@ -164,6 +173,8 @@ public class RobotContainer {
     MechanismRoot2d root2 = mech.getRoot("Intake", 1, 0.5);
     intakeArm.setMechanism(root2.append(intakeArm.getArmMechanism()));
     SmartDashboard.putData("Intake Mechanism", mech);
+
+    System.out.println(intake.getName());
 
     isBlue = DriverStation.getAlliance() == DriverStation.Alliance.Blue;
 
