@@ -17,10 +17,15 @@ import frc.robot.subsystems.claw.Claw;
 import frc.robot.subsystems.claw.ClawIO;
 import frc.robot.subsystems.claw.ClawIOSim;
 import frc.robot.subsystems.claw.ClawIOSparkMax;
-import frc.robot.subsystems.drive.Drive;
+/* import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOSim;
-import frc.robot.subsystems.drive.DriveIOSparkMax;
+import frc.robot.subsystems.drive.DriveIOSparkMax; */
+import frc.robot.subsystems.swerve.Drive;
+import frc.robot.subsystems.swerve.GyroIO;
+import frc.robot.subsystems.swerve.ModuleIO;
+import frc.robot.subsystems.swerve.ModuleIOSim;
+import frc.robot.subsystems.swerve.ModuleIOSparkMax;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
@@ -80,7 +85,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class RobotContainer {
   // Subsystems
-  private final Drive drive;
+  /* private final Drive drive; */
+  private final Drive swerve;
   private final Elevator elevator;
   private final PivotArm pivotArm;
   private final Claw claw;
@@ -115,7 +121,13 @@ public class RobotContainer {
     switch (Constants.currentMode) {
       // Real robot, instantiate hardware IO implementations
       case REAL:
-        drive = new Drive(new DriveIOSparkMax(), new Pose2d());
+        /* drive = new Drive(new DriveIOSparkMax(), new Pose2d()); */
+        swerve = new Drive(new GyroIO(),
+          new ModuleIOSparkMax(1),
+          new ModuleIOSparkMax(2),
+          new ModuleIOSparkMax(3),
+          new ModuleIOSparkMax(4),
+        };
         elevator = new Elevator(new ElevatorIOSparkMax());
         pivotArm = new PivotArm(new PivotArmIOSparkMax());
         claw = new Claw(new ClawIOSparkMax());
