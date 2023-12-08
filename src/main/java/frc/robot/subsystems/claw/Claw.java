@@ -3,7 +3,7 @@ package frc.robot.subsystems.claw;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -18,6 +18,7 @@ public class Claw extends SubsystemBase {
         io.setBrakeMode(true);
     }
 
+    
     @Override
     public void periodic() {
         io.updateInputs(inputs);
@@ -29,7 +30,7 @@ public class Claw extends SubsystemBase {
         io.setSpeed(motorVolts);
     }
 
-    public CommandBase grab() {
+    public Command grab() {
         return new FunctionalCommand(
             () -> io.setSensor(true),
             () -> io.setSpeed(12.0),
@@ -39,7 +40,7 @@ public class Claw extends SubsystemBase {
         );
     }
 
-    public CommandBase release() {
+    public Command release() {
         return new FunctionalCommand(
             () -> io.setSensor(false),
             () -> io.setSpeed(-12.0),

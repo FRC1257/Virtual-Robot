@@ -13,11 +13,11 @@
 
 package frc.robot.subsystems.swerve;
 
-/* import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PathPlannerLogging;
-import com.pathplanner.lib.util.ReplanningConfig; */
+import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -62,7 +62,7 @@ public class Drive extends SubsystemBase {
     modules[3] = new Module(brModuleIO, 3);
 
     // Configure AutoBuilder for PathPlanner
-    /* AutoBuilder.configureHolonomic(
+    AutoBuilder.configureHolonomic(
         this::getPose,
         this::setPose,
         () -> kinematics.toChassisSpeeds(getModuleStates()),
@@ -79,7 +79,7 @@ public class Drive extends SubsystemBase {
     PathPlannerLogging.setLogTargetPoseCallback(
         (targetPose) -> {
           Logger.getInstance().recordOutput("Odometry/TrajectorySetpoint", targetPose);
-        }); */
+        }); 
   }
 
   public void periodic() {
@@ -180,7 +180,7 @@ public class Drive extends SubsystemBase {
   }
 
   /** Returns the module states (turn angles and drive velocitoes) for all of the modules. */
-  @AutoLogOutput(key = "SwerveStates/Measured")
+  /* @AutoLogOutput(key = "SwerveStates/Measured")
   private SwerveModuleState[] getModuleStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
     for (int i = 0; i < 4; i++) {
@@ -189,10 +189,20 @@ public class Drive extends SubsystemBase {
     return states;
   }
 
-  /** Returns the current odometry pose. */
+  /** Returns the current odometry pose. 
   @AutoLogOutput(key = "Odometry/Robot")
+  
+ */
   public Pose2d getPose() {
     return pose;
+  }
+
+  private SwerveModuleState[] getModuleStates() {
+    SwerveModuleState[] states = new SwerveModuleState[4];
+    for (int i = 0; i < 4; i++) {
+      states[i] = modules[i].getState();
+    }
+    return states;
   }
 
   /** Returns the current odometry rotation. */

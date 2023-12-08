@@ -47,7 +47,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
         IntakeArmSimConstants.kMinAngleRads,
         IntakeArmSimConstants.kMaxAngleRads,
         true,
-        VecBuilder.fill(IntakeArmSimConstants.kArmEncoderDistPerPulse) // Add noise with a std-dev of 1 tick
+        m_armSetpointDegrees, VecBuilder.fill(IntakeArmSimConstants.kArmEncoderDistPerPulse) // Add noise with a std-dev of 1 tick
     );
   private final EncoderSim m_encoderSim = new EncoderSim(m_encoder);
     

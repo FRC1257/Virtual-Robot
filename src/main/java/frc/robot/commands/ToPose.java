@@ -1,16 +1,16 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.TrajectoryManager;
 
-public class ToPose extends CommandBase {
+public class ToPose extends Command {
     
     private Drive drive;
     private Pose2d pose;
     private TrajectoryManager manager;
-    private CommandBase command;
+    private Command command;
 
     public ToPose(Drive drive, TrajectoryManager manager, Pose2d pose) {
         this.drive = drive;

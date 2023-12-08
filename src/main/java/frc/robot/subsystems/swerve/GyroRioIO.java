@@ -27,7 +27,7 @@ public class GyroRioIO implements GyroIO {
         navx = new AHRS();
         resetRoll = 0;
         resetPitch = 0;
-        navx.calibrate();
+        navx.resetDisplacement();
 
         gyro = new ADXRS450_Gyro();
         gyro.calibrate();

@@ -42,7 +42,7 @@ public class ElevatorIOSim implements ElevatorIO {
             kMinElevatorHeightMeters,
             kMaxElevatorHeightMeters,
             false,
-            VecBuilder.fill(0.01)
+            0, VecBuilder.fill(0.01)
         );
 
     private final EncoderSim m_encoderSim = new EncoderSim(m_encoder);

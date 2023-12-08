@@ -8,21 +8,21 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.Constants.Elevator.ElevatorPhysicalConstants;
+import frc.robot.commands.DriveCommands;
 import frc.robot.commands.SpinAuto;
 import frc.robot.commands.ToPose;
 import frc.robot.subsystems.claw.Claw;
 import frc.robot.subsystems.claw.ClawIO;
 import frc.robot.subsystems.claw.ClawIOSim;
 import frc.robot.subsystems.claw.ClawIOSparkMax;
-/* import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveIO;
-import frc.robot.subsystems.drive.DriveIOSim;
-import frc.robot.subsystems.drive.DriveIOSparkMax; */
 import frc.robot.subsystems.swerve.Drive;
 import frc.robot.subsystems.swerve.GyroIO;
+import frc.robot.subsystems.swerve.GyroRioIO;
 import frc.robot.subsystems.swerve.ModuleIO;
 import frc.robot.subsystems.swerve.ModuleIOSim;
 import frc.robot.subsystems.swerve.ModuleIOSparkMax;
@@ -70,8 +70,9 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj.XboxController.Button;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -122,12 +123,13 @@ public class RobotContainer {
       // Real robot, instantiate hardware IO implementations
       case REAL:
         /* drive = new Drive(new DriveIOSparkMax(), new Pose2d()); */
-        swerve = new Drive(new GyroIO(),
+        swerve = new Drive(
+          GyroRioIO.getInstance(),
           new ModuleIOSparkMax(1),
           new ModuleIOSparkMax(2),
           new ModuleIOSparkMax(3),
-          new ModuleIOSparkMax(4),
-        };
+          new ModuleIOSparkMax(4)
+        );
         elevator = new Elevator(new ElevatorIOSparkMax());
         pivotArm = new PivotArm(new PivotArmIOSparkMax());
         claw = new Claw(new ClawIOSparkMax());
@@ -141,7 +143,15 @@ public class RobotContainer {
 
       // Sim robot, instantiate physics sim IO implementations
       case SIM:
-        drive = new Drive(new DriveIOSim(), new Pose2d());
+        swerve = new Drive(
+          new GyroIO() {
+            
+          }, 
+          new ModuleIOSim(), 
+          new ModuleIOSim(), 
+          new ModuleIOSim(), 
+          new ModuleIOSim()
+        );
         elevator = new Elevator(new ElevatorIOSim());
         pivotArm = new PivotArm(new PivotArmIOSim());
         claw = new Claw(new ClawIOSim());
@@ -153,8 +163,13 @@ public class RobotContainer {
 
       // Replayed robot, disable IO implementations
       default:
-        drive = new Drive(new DriveIO() {
-        }, new Pose2d());
+        swerve = new Drive(
+          new GyroIO() {},
+          new ModuleIO() {},
+          new ModuleIO() {},
+          new ModuleIO() {},
+          new ModuleIO() {}
+        );
         elevator = new Elevator(new ElevatorIO() {
         });
         pivotArm = new PivotArm(new PivotArmIO() {
@@ -188,13 +203,13 @@ public class RobotContainer {
 
     System.out.println(intake.getName());
 
-    isBlue = DriverStation.getAlliance() == DriverStation.Alliance.Blue;
+    isBlue = DriverStation.getAlliance().equals(DriverStation.Alliance.Blue);
 
     // Set up auto routines
     autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
-    autoChooser.addOption("Spin", new SpinAuto(drive));
+    /* autoChooser.addOption("Spin", new SpinAuto(swerve)); */
 
-    manager = new TrajectoryManager(drive);
+    manager = new TrajectoryManager(new frc.robot.subsystems.drive.Drive(null, null));
     manager.setColor(isBlue);
 
     // Configure the button bindings
@@ -210,8 +225,23 @@ public class RobotContainer {
   private void configureButtonBindings() {
     // Clear old buttons
     CommandScheduler.getInstance().getActiveButtonLoop().clear();
-    drive.setDefaultCommand(
-        new RunCommand(() -> drive.driveArcade(driver.getDriveForward(), driver.getDriveTurn()), drive));
+    swerve.setDefaultCommand(
+        DriveCommands.joystickDrive(
+            swerve,
+            () -> -driver.getLeftY(),
+            () -> -driver.getLeftX(),
+            () -> -driver.getRightX()));
+    driver.x().onTrue(Commands.runOnce(swerve::stopWithX, swerve));
+    driver
+        .b()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        swerve.setPose(
+                            new Pose2d(swerve.getPose().getTranslation(), new Rotation2d())),
+                    swerve)
+                .ignoringDisable(true));
+                
     elevator.setDefaultCommand(
         new RunCommand(() -> elevator.move(operator.getElevatorSpeed()), elevator));
     operator.getY().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND));
@@ -233,12 +263,12 @@ public class RobotContainer {
     driver.getDPad(CommandSnailController.DPad.LEFT).onTrue(new InstantCommand(() -> robotState.toggleInputs(0)));
     driver.getDPad(CommandSnailController.DPad.UP).onTrue(new InstantCommand(() -> robotState.toggleInputs(1)));
     driver.getDPad(CommandSnailController.DPad.RIGHT).onTrue(new InstantCommand(() -> robotState.toggleInputs(2)));
-    driver.getDPad(CommandSnailController.DPad.DOWN).onTrue(drive.endTrajectoryCommand().andThen(robotState.getMovement(manager))); // restarts the trajectory
+    // driver.getDPad(CommandSnailController.DPad.DOWN).onTrue(drive.endTrajectoryCommand().andThen(robotState.getMovement(manager))); // restarts the trajectory
 
     // set something for the laterator and intake later
 
     // cancel trajectory
-    driver.getY().onTrue(drive.endTrajectoryCommand());
+    // driver.getY().onTrue(drive.endTrajectoryCommand());
     // driver.start().onTrue(drive.turnAngleCommand(45));
     // driver.rightBumper().onTrue(new InstantCommand(() -> manager.scheduleSmartMotionCommand(FieldConstants.BLUE_CHARGE_POSE[0])));
   }
@@ -249,12 +279,12 @@ public class RobotContainer {
     // driver.leftBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos, manager));
     // driver.rightBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos2, manager));
     // cancel trajectory
-    driver.getY().onTrue(drive.endTrajectoryCommand());
+    // driver.getY().onTrue(drive.endTrajectoryCommand());
     // driver.start().onTrue(drive.turnAngleCommand(45));
     // new Trigger(() -> robotState.checkTravelToPickup()).onTrue(new InstantCommand(() -> manager.scheduleDriveForward(FieldConstants.BLUE_CHARGE_POSE[0])));
   }
 
-  public CommandBase scoreHigh() {
+  public Command scoreHigh() {
     return new SequentialCommandGroup(
         new ParallelCommandGroup(
             claw.grab(),
@@ -264,7 +294,7 @@ public class RobotContainer {
         claw.release());
   }
 
-  public CommandBase scoreMid() {
+  public Command scoreMid() {
     return new SequentialCommandGroup(
         new ParallelCommandGroup(
             claw.grab(),
@@ -274,7 +304,7 @@ public class RobotContainer {
         claw.release());
   }
 
-  public CommandBase scoreLow() {
+  public Command scoreLow() {
     return new SequentialCommandGroup(
         new ParallelCommandGroup(
             claw.grab(),
@@ -284,7 +314,7 @@ public class RobotContainer {
         claw.release());
   }
 
-  public CommandBase holdPos() {
+  public Command holdPos() {
     return new RunCommand(() -> {
       claw.release().schedule();
       pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_HOLD).schedule();
@@ -292,7 +322,7 @@ public class RobotContainer {
     }, claw, pivotArm, elevator);
   }
 
-  public CommandBase grabStation() {
+  public Command grabStation() {
     return new SequentialCommandGroup(
         new ParallelCommandGroup(
             claw.release(),

@@ -47,7 +47,7 @@ public class PivotWristIOSim implements PivotWristIO {
         PivotWristSimConstants.kMinAngleRads,
         PivotWristSimConstants.kMaxAngleRads,
         true,
-        VecBuilder.fill(PivotWristSimConstants.kWristEncoderDistPerPulse) // Add noise with a std-dev of 1 tick
+        m_armSetpointDegrees, VecBuilder.fill(PivotWristSimConstants.kWristEncoderDistPerPulse) // Add noise with a std-dev of 1 tick
     );
   private final EncoderSim m_encoderSim = new EncoderSim(m_encoder);
     

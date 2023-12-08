@@ -4,13 +4,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.pathplanner.lib.PathConstraints;
-import com.pathplanner.lib.PathPlanner;
-import com.pathplanner.lib.PathPlannerTrajectory;
-import com.pathplanner.lib.PathPoint;
-import com.pathplanner.lib.PathPlannerTrajectory.EventMarker;
-import com.pathplanner.lib.auto.RamseteAutoBuilder;
-
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -21,7 +14,7 @@ import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import edu.wpi.first.math.trajectory.constraint.RectangularRegionConstraint;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -305,7 +298,7 @@ public class TrajectoryManager {
         return waypoints;
     }
 
-    public CommandBase backUpAndTurnWaypoint(Pose2d waypoint) {
+    public Command backUpAndTurnWaypoint(Pose2d waypoint) {
         // TODO only backup and turn when neccecary
         Pose2d backupPose = new Pose2d(waypoint.getTranslation().plus(new Translation2d(0, isBlue ? 0.5 : -0.5)), waypoint.getRotation());
         double angle = backupPose.getRotation().minus(drive.getPose().getRotation()).getDegrees();
@@ -322,7 +315,7 @@ public class TrajectoryManager {
         }
     }
 
-    public CommandBase goToSubstation(PathRoute type) {
+    public Command goToSubstation(PathRoute type) {
         List<Translation2d> waypoints = getWaypoints(type);
         Pose2d pose = getSubstationPose();
 
@@ -337,8 +330,8 @@ public class TrajectoryManager {
         }
     }
 
-    public CommandBase getOnTheFlyCommand(TrajectoryTypes type, Pose2d pose) {
-        return new CommandBase() {
+    public Command getOnTheFlyCommand(TrajectoryTypes type, Pose2d pose) {
+        return new Command() {
             @Override
             public void initialize() {
                 // TODO use a smarter way to get the trajectory then try everything
@@ -375,8 +368,8 @@ public class TrajectoryManager {
         };
     }
 
-    public CommandBase getOnTheFlyCommand(TrajectoryTypes type, Pose2d pose, List<Translation2d> waypoints) {
-        return new CommandBase() {
+    public Command getOnTheFlyCommand(TrajectoryTypes type, Pose2d pose, List<Translation2d> waypoints) {
+        return new Command() {
             @Override
             public void initialize() {
                 // TODO use a smarter way to get the trajectory then try everything
@@ -426,7 +419,7 @@ public class TrajectoryManager {
         }
 
         // check if its easier to reverse or go forward
-        CommandBase driveCommand;
+        Command driveCommand;
         if (isReversed(drive.getPose(), pose)) {
             driveCommand = getOnTheFlyCommand(TrajectoryTypes.DriveForward, pose);
         } else {
@@ -434,12 +427,12 @@ public class TrajectoryManager {
         }
 
         // Turn to proper pose
-        CommandBase turnCommand = drive.turnExactAngle(pose.getRotation().getDegrees());
+        Command turnCommand = drive.turnExactAngle(pose.getRotation().getDegrees());
 
         CommandScheduler.getInstance().schedule(new SequentialCommandGroup(driveCommand, turnCommand));
     }
 
-    public CommandBase turnIfNecessary(Pose2d pose) {
+    public Command turnIfNecessary(Pose2d pose) {
         // check if need to rotate
         if (Math.abs(angleBetween(drive.getPose(), pose)) < 90 || drive.getVelocityMetersPerSecond() > 1) {
             return new InstantCommand();
@@ -448,7 +441,7 @@ public class TrajectoryManager {
         return drive.turnAngleCommand(angleBetween(drive.getPose(), pose) + 180);
     }
 
-    public CommandBase goToPos(Pose2d pose) {
+    public Command goToPos(Pose2d pose) {
         // check if need to rotate
         return new SequentialCommandGroup(
             turnIfNecessary(pose),
@@ -457,7 +450,7 @@ public class TrajectoryManager {
         );
     }
 
-    public CommandBase goToPosBackwards(Pose2d pose) {
+    public Command goToPosBackwards(Pose2d pose) {
         // check if need to rotate
         return new SequentialCommandGroup(
             getOnTheFlyCommand(TrajectoryTypes.ReverseToPose, pose),

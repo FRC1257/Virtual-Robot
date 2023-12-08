@@ -42,7 +42,7 @@ public class LateratorIOSim implements LateratorIO {
             kMinLateratorHeightMeters,
             kMaxLateratorHeightMeters,
             false,
-            VecBuilder.fill(0.01)
+            0, VecBuilder.fill(0.01)
         );
 
     private final EncoderSim m_encoderSim = new EncoderSim(m_encoder);
