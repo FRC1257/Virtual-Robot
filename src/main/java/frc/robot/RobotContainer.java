@@ -209,8 +209,8 @@ public class RobotContainer {
     autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
     /* autoChooser.addOption("Spin", new SpinAuto(swerve)); */
 
-    manager = new TrajectoryManager(new frc.robot.subsystems.drive.Drive(null, null));
-    manager.setColor(isBlue);
+    manager = null;
+    // manager.setColor(isBlue);
 
     // Configure the button bindings
     configureButtonBindings();
@@ -259,7 +259,7 @@ public class RobotContainer {
     operator.rightBumper().onTrue(claw.release());
 
     // driver.rightBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos, manager));
-    driver.leftBumper().onTrue(new InstantCommand(() -> robotState.scheduleMovement(manager)));
+    // driver.leftBumper().onTrue(new InstantCommand(() -> robotState.scheduleMovement(manager)));
     driver.getDPad(CommandSnailController.DPad.LEFT).onTrue(new InstantCommand(() -> robotState.toggleInputs(0)));
     driver.getDPad(CommandSnailController.DPad.UP).onTrue(new InstantCommand(() -> robotState.toggleInputs(1)));
     driver.getDPad(CommandSnailController.DPad.RIGHT).onTrue(new InstantCommand(() -> robotState.toggleInputs(2)));

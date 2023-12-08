@@ -85,9 +85,9 @@ public final class Constants {
 
   public static class Laterator {
     public static class LateratorSimConstants {
-      public static final int kMotorPort = 0;
-      public static final int kEncoderAChannel = 0;
-      public static final int kEncoderBChannel = 1;
+      public static final int kMotorPort = 1;
+      public static final int kEncoderAChannel = 2;
+      public static final int kEncoderBChannel = 3;
       public static final int kJoystickPort = 0;
 
       public static final double kLateratorKp = 5;
@@ -160,8 +160,8 @@ public final class Constants {
 
     public static class PivotArmSimConstants {
       public static final int kMotorPort = 2;
-      public static final int kEncoderAChannel = 2;
-      public static final int kEncoderBChannel = 3;
+      public static final int kEncoderAChannel = 4;
+      public static final int kEncoderBChannel = 5;
       public static final int kJoystickPort = 0;
 
       public static final String kArmPositionKey = "ArmPosition";
@@ -207,9 +207,9 @@ public final class Constants {
     }
 
     public static class PivotWristSimConstants {
-      public static final int kMotorPort = 2;
-      public static final int kEncoderAChannel = 2;
-      public static final int kEncoderBChannel = 3;
+      public static final int kMotorPort = 3;
+      public static final int kEncoderAChannel = 6;
+      public static final int kEncoderBChannel = 7;
       public static final int kJoystickPort = 0;
 
       public static final String kWristPositionKey = "WristPosition";
@@ -255,9 +255,9 @@ public final class Constants {
     }
 
     public static class IntakeArmSimConstants {
-      public static final int kMotorPort = 2;
-      public static final int kEncoderAChannel = 2;
-      public static final int kEncoderBChannel = 3;
+      public static final int kMotorPort = 4;
+      public static final int kEncoderAChannel = 8;
+      public static final int kEncoderBChannel = 9;
       public static final int kJoystickPort = 0;
 
       public static final String kArmPositionKey = "ArmPosition";
@@ -294,8 +294,8 @@ public final class Constants {
     public static double CLAW_CLOSE_TIME = 2.20;
 
     public static class ClawSimConstants {
-      public static final int kEncoderAChannel = 4;
-      public static final int kEncoderBChannel = 5;
+      public static final int kEncoderAChannel = 10;
+      public static final int kEncoderBChannel = 11;
       public static final double kEncoderDistancePerPulse = 3;
 
     }
@@ -303,8 +303,8 @@ public final class Constants {
 
 public static class Intake {
   public static class IntakeSimConstants {
-    public static final int kMotorPort = 3;
-    public static final int[] kEncoderPorts = new int[] { 6, 7 };
+    public static final int kMotorPort = 5;
+    public static final int[] kEncoderPorts = new int[] { 12, 13 };
   }
 
   public static double POSITION_CONVERSION_FACTOR = 0.5;

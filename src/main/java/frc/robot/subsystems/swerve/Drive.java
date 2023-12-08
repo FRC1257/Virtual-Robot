@@ -179,24 +179,17 @@ public class Drive extends SubsystemBase {
     return driveVelocityAverage / 4.0;
   }
 
-  /** Returns the module states (turn angles and drive velocitoes) for all of the modules. */
-  /* @AutoLogOutput(key = "SwerveStates/Measured")
-  private SwerveModuleState[] getModuleStates() {
-    SwerveModuleState[] states = new SwerveModuleState[4];
-    for (int i = 0; i < 4; i++) {
-      states[i] = modules[i].getState();
-    }
-    return states;
-  }
-
-  /** Returns the current odometry pose. 
-  @AutoLogOutput(key = "Odometry/Robot")
   
- */
+
+  /** Returns the current odometry pose. */
+  
+  @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
     return pose;
   }
 
+  /** Returns the module states (turn angles and drive velocitoes) for all of the modules. */
+  @AutoLogOutput(key = "SwerveStates/Measured")
   private SwerveModuleState[] getModuleStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
     for (int i = 0; i < 4; i++) {
