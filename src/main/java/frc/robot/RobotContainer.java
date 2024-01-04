@@ -13,10 +13,6 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.commands.SpinAuto;
 import frc.robot.commands.ToPose;
-import frc.robot.subsystems.claw.Claw;
-import frc.robot.subsystems.claw.ClawIO;
-import frc.robot.subsystems.claw.ClawIOSim;
-import frc.robot.subsystems.claw.ClawIOSparkMax;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOSim;
@@ -25,26 +21,6 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOSparkMax;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
-import frc.robot.subsystems.intake.IntakeIOSim;
-import frc.robot.subsystems.intake.IntakeIOSparkMax;
-import frc.robot.subsystems.intakeArm.IntakeArm;
-import frc.robot.subsystems.intakeArm.IntakeArmIO;
-import frc.robot.subsystems.intakeArm.IntakeArmIOSim;
-import frc.robot.subsystems.intakeArm.IntakeArmIOSparkMax;
-import frc.robot.subsystems.laterator.Laterator;
-import frc.robot.subsystems.laterator.LateratorIOSparkMax;
-import frc.robot.subsystems.laterator.LateratorIOSim;
-import frc.robot.subsystems.laterator.LateratorIO;
-import frc.robot.subsystems.pivotArm.PivotArm;
-import frc.robot.subsystems.pivotArm.PivotArmIO;
-import frc.robot.subsystems.pivotArm.PivotArmIOSim;
-import frc.robot.subsystems.pivotArm.PivotArmIOSparkMax;
-import frc.robot.subsystems.pivotWrist.PivotWrist;
-import frc.robot.subsystems.pivotWrist.PivotWristIO;
-import frc.robot.subsystems.pivotWrist.PivotWristIOSim;
-import frc.robot.subsystems.pivotWrist.PivotWristIOSparkMax;
 
 import static frc.robot.Constants.Elevator.ElevatorPhysicalConstants;
 
@@ -82,13 +58,6 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Elevator elevator;
-  private final PivotArm pivotArm;
-  private final Claw claw;
-  private final Laterator laterator;
-  private final IntakeArm intakeArm;
-  private final PivotWrist pivotWrist;
-  private final Intake intake;
-  private final Gyro gyro = Gyro.getInstance();
 
   private final TrajectoryManager manager;
 
@@ -117,12 +86,6 @@ public class RobotContainer {
       case REAL:
         drive = new Drive(new DriveIOSparkMax(), new Pose2d());
         elevator = new Elevator(new ElevatorIOSparkMax());
-        pivotArm = new PivotArm(new PivotArmIOSparkMax());
-        claw = new Claw(new ClawIOSparkMax());
-        laterator = new Laterator(new LateratorIOSparkMax());
-        intakeArm = new IntakeArm(new IntakeArmIOSparkMax());
-        pivotWrist = new PivotWrist(new PivotWristIOSparkMax());
-        intake = new Intake(new IntakeIOSparkMax());
         // drive = new Drive(new DriveIOFalcon500());
         // flywheel = new Flywheel(new FlywheelIOFalcon500());
         break;
@@ -131,12 +94,6 @@ public class RobotContainer {
       case SIM:
         drive = new Drive(new DriveIOSim(), new Pose2d());
         elevator = new Elevator(new ElevatorIOSim());
-        pivotArm = new PivotArm(new PivotArmIOSim());
-        claw = new Claw(new ClawIOSim());
-        laterator = new Laterator(new LateratorIOSim());
-        intakeArm = new IntakeArm(new IntakeArmIOSim());
-        pivotWrist = new PivotWrist(new PivotWristIOSim());
-        intake = new Intake(new IntakeIOSim());
         break;
 
       // Replayed robot, disable IO implementations
@@ -144,18 +101,6 @@ public class RobotContainer {
         drive = new Drive(new DriveIO() {
         }, new Pose2d());
         elevator = new Elevator(new ElevatorIO() {
-        });
-        pivotArm = new PivotArm(new PivotArmIO() {
-        });
-        claw = new Claw(new ClawIO() {
-        });
-        laterator = new Laterator(new LateratorIO() {
-        });
-        intakeArm = new IntakeArm(new IntakeArmIO() {
-        });
-        pivotWrist = new PivotWrist(new PivotWristIO() {
-        });
-        intake = new Intake(new IntakeIO() {
         });
         break;
     }
@@ -165,16 +110,7 @@ public class RobotContainer {
 
     MechanismRoot2d root = mech.getRoot("elevator", 1, 0.5);
     elevator.setMechanism(root.append(elevator.getElevatorMechanism()));
-    laterator.setMechanism(elevator.append(laterator.getLateratorMechanism()));
-    pivotArm.setMechanism(laterator.append(pivotArm.getArmMechanism()));
-    pivotWrist.setMechanism(pivotArm.append(pivotWrist.getWristMechanism()));
     SmartDashboard.putData("Arm Mechanism", mech);
-
-    MechanismRoot2d root2 = mech.getRoot("Intake", 1, 0.5);
-    intakeArm.setMechanism(root2.append(intakeArm.getArmMechanism()));
-    SmartDashboard.putData("Intake Mechanism", mech);
-
-    System.out.println(intake.getName());
 
     isBlue = DriverStation.getAlliance() == DriverStation.Alliance.Blue;
 
@@ -205,30 +141,6 @@ public class RobotContainer {
     operator.getY().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND));
     operator.getA().onTrue(elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_RETRACT));
 
-    // configures the subsystem's default command which is a lambda that moves the
-    // subsystem based on the controller's input
-    pivotArm.setDefaultCommand(
-        new RunCommand(() -> pivotArm.move(operator.getLeftY()), pivotArm));
-    // these are triggers that run the subsystem's command
-    operator.getB().onTrue(pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_TOP));
-    operator.getX().onTrue(pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_BOTTOM));
-
-    operator.leftBumper().onTrue(claw.grab());
-    operator.rightBumper().onTrue(claw.release());
-
-    // driver.rightBumper().onTrue(new GenerateOnTheFly(drive, TrajectoryManager.TrajectoryTypes.GoToPos, manager));
-    driver.leftBumper().onTrue(new InstantCommand(() -> robotState.scheduleMovement(manager)));
-    driver.getDPad(CommandSnailController.DPad.LEFT).onTrue(new InstantCommand(() -> robotState.toggleInputs(0)));
-    driver.getDPad(CommandSnailController.DPad.UP).onTrue(new InstantCommand(() -> robotState.toggleInputs(1)));
-    driver.getDPad(CommandSnailController.DPad.RIGHT).onTrue(new InstantCommand(() -> robotState.toggleInputs(2)));
-    driver.getDPad(CommandSnailController.DPad.DOWN).onTrue(drive.endTrajectoryCommand().andThen(robotState.getMovement(manager))); // restarts the trajectory
-
-    // set something for the laterator and intake later
-
-    // cancel trajectory
-    driver.getY().onTrue(drive.endTrajectoryCommand());
-    // driver.start().onTrue(drive.turnAngleCommand(45));
-    // driver.rightBumper().onTrue(new InstantCommand(() -> manager.scheduleSmartMotionCommand(FieldConstants.BLUE_CHARGE_POSE[0])));
   }
 
   public void driverAssistCommands() {
@@ -240,54 +152,6 @@ public class RobotContainer {
     driver.getY().onTrue(drive.endTrajectoryCommand());
     // driver.start().onTrue(drive.turnAngleCommand(45));
     // new Trigger(() -> robotState.checkTravelToPickup()).onTrue(new InstantCommand(() -> manager.scheduleDriveForward(FieldConstants.BLUE_CHARGE_POSE[0])));
-  }
-
-  public CommandBase scoreHigh() {
-    return new SequentialCommandGroup(
-        new ParallelCommandGroup(
-            claw.grab(),
-            pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_TOP),
-            elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND)),
-        new WaitCommand(1),
-        claw.release());
-  }
-
-  public CommandBase scoreMid() {
-    return new SequentialCommandGroup(
-        new ParallelCommandGroup(
-            claw.grab(),
-            pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_MID),
-            elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND)),
-        new WaitCommand(1),
-        claw.release());
-  }
-
-  public CommandBase scoreLow() {
-    return new SequentialCommandGroup(
-        new ParallelCommandGroup(
-            claw.grab(),
-            pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_BOTTOM),
-            elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND)),
-        new WaitCommand(1),
-        claw.release());
-  }
-
-  public CommandBase holdPos() {
-    return new RunCommand(() -> {
-      claw.release().schedule();
-      pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_HOLD).schedule();
-      elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_RETRACT).schedule();
-    }, claw, pivotArm, elevator);
-  }
-
-  public CommandBase grabStation() {
-    return new SequentialCommandGroup(
-        new ParallelCommandGroup(
-            claw.release(),
-            pivotArm.PIDCommand(Constants.PivotArm.PIVOT_ARM_SETPOINT_TOP),
-            elevator.PIDCommand(ElevatorPhysicalConstants.ELEVATOR_SETPOINT_EXTEND)),
-        new WaitCommand(1), // back up and then grab
-        claw.grab());
   }
 
   /**
