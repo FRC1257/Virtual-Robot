@@ -207,7 +207,7 @@ public final class Constants {
     }
 
     public static class PivotWristSimConstants {
-      public static final int kMotorPort = 2;
+      public static final int kMotorPort = 11;
       public static final int kEncoderAChannel = 2;
       public static final int kEncoderBChannel = 3;
       public static final int kJoystickPort = 0;

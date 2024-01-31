@@ -17,21 +17,17 @@
       "/SmartDashboard/Drive": "Subsystem",
       "/SmartDashboard/Elevator": "Subsystem",
       "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/Intake Mechanism": "Mechanism2d",
       "/SmartDashboard/PivotArm": "Subsystem"
     },
     "windows": {
       "/SmartDashboard/Arm Mechanism": {
         "window": {
-          "visible": true
-        }
-      },
-      "/SmartDashboard/Auto Choices": {
-        "window": {
+          "name": "your mom",
           "visible": true
         }
       },
       "/SmartDashboard/Field": {
-        "image": "C:\\Users\\akash\\Downloads\\2023-field.png",
         "traj": {
           "arrows": false,
           "style": "Line"
@@ -71,5 +67,8 @@
         "open": true
       }
     }
+  },
+  "NetworkTables View": {
+    "visible": false
   }
 }
